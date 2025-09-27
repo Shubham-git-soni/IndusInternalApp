@@ -9,8 +9,8 @@ import ModuleSidebar from './ModuleSidebar';
 const BottomNavigation = () => {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  // Determine current module from path
+ 
+  // Determine current module from path  d
   const getCurrentModule = () => {
     if (pathname.startsWith('/hrm')) return 'hrm';
     if (pathname.startsWith('/crm')) return 'crm';
