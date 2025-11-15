@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Save, User, MapPin, Building2, Camera, CreditCard, Users, IndianRupee, Upload, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import DashboardLayout from '@/components/DashboardLayout';
+import Tabs from '@/components/Tabs';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { calculateSalaryComponents as calculateFromHRSettings, getHRSettings, SalarySettings } from '@/utils/hrSettings';
@@ -296,12 +299,12 @@ export default function AddTeamMemberPage() {
   };
 
   const tabs = [
-    { id: 'basic', name: 'Basic Information', shortName: 'Basic Info', icon: User },
-    { id: 'contact', name: 'Contact & Address', shortName: 'Contact', icon: MapPin },
-    { id: 'job', name: 'Job Information', shortName: 'Job Info', icon: Building2 },
-    { id: 'bank', name: 'Bank & Documents', shortName: 'Bank & Docs', icon: CreditCard },
-    ...(formData.maritalStatus === 'Married' ? [{ id: 'family' as const, name: 'Family Details', shortName: 'Family', icon: Users }] : []),
-    { id: 'salary', name: 'Salary Information', shortName: 'Salary', icon: IndianRupee }
+    { id: 'basic', label: 'Basic Information', shortLabel: 'Basic Info', icon: User },
+    { id: 'contact', label: 'Contact & Address', shortLabel: 'Contact', icon: MapPin },
+    { id: 'job', label: 'Job Information', shortLabel: 'Job Info', icon: Building2 },
+    { id: 'bank', label: 'Bank & Documents', shortLabel: 'Bank & Docs', icon: CreditCard },
+    ...(formData.maritalStatus === 'Married' ? [{ id: 'family' as const, label: 'Family Details', shortLabel: 'Family', icon: Users }] : []),
+    { id: 'salary', label: 'Salary Information', shortLabel: 'Salary', icon: IndianRupee }
   ];
 
   return (
@@ -316,48 +319,50 @@ export default function AddTeamMemberPage() {
           scrollbar-width: none;
         }
       `}</style>
-      <div className="pt-16 pb-20 lg:pb-4 px-3 sm:px-4 space-y-4 sm:space-y-6">
+      <div className="pt-6 pb-2 space-y-4 sm:space-y-6">
         {/* Header - Mobile Optimized */}
-        <div className="pt-2 sm:pt-4">
+        <div>
           <div className="flex items-center space-x-3 sm:space-x-4">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => router.back()}
-              className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+              className="flex-shrink-0"
             >
-              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
-            </button>
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            </Button>
             <div className="min-w-0">
-              <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Add New Team Member</h1>
-              <p className="text-sm sm:text-base text-gray-600 mt-1">Create a new employee profile</p>
+              <h1 className="text-lg sm:text-2xl font-bold text-foreground">Add New Team Member</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">Create a new employee profile</p>
             </div>
           </div>
         </div>
 
         {dataLoading ? (
           // Loading state
-          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-card rounded-lg sm:rounded-xl shadow-sm border border-border p-6">
             <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+              <div className="h-8 bg-muted rounded w-1/4 mb-4"></div>
               <div className="space-y-4">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-10 bg-gray-200 rounded"></div>
+                  <div key={i} className="h-10 bg-muted rounded"></div>
                 ))}
               </div>
             </div>
           </div>
         ) : departments.length === 0 ? (
           // No reference data available
-          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-card rounded-lg sm:rounded-xl shadow-sm border border-border p-6">
             <div className="text-center py-12">
-              <Building2 className="mx-auto h-16 w-16 text-gray-400" />
-              <h3 className="mt-4 text-lg font-medium text-gray-900">Setup Required</h3>
-              <p className="mt-2 text-sm text-gray-500">
+              <Building2 className="mx-auto h-16 w-16 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-medium text-foreground">Setup Required</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
                 Please set up departments, designations, and roles before adding employees.
               </p>
               <div className="mt-6">
                 <Link
                   href="/hrm/settings"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90"
                 >
                   Go to Settings
                 </Link>
@@ -365,58 +370,30 @@ export default function AddTeamMemberPage() {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 pb-0 sm:pb-4">
           {/* Tab Navigation - Mobile Optimized with Horizontal Scroll */}
-          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200">
-            <div className="border-b border-gray-200 relative">
-              {/* Left fade indicator for mobile */}
-              <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none sm:hidden"></div>
-              {/* Right fade indicator for mobile */}
-              <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none sm:hidden"></div>
-
-              <nav
-                className="flex px-4 sm:px-6 overflow-x-auto hide-scrollbar"
-                aria-label="Tabs"
-                style={{
-                  WebkitOverflowScrolling: 'touch', /* iOS smooth scrolling */
-                }}
-              >
-                {tabs.map((tab) => {
-                  const IconComponent = tab.icon;
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`${
-                        activeTab === tab.id
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      } whitespace-nowrap py-3 sm:py-4 px-2 sm:px-3 mr-2 sm:mr-6 border-b-2 font-medium text-xs sm:text-sm flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0`}
-                    >
-                      <IconComponent className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                      <span className="whitespace-nowrap">
-                        <span className="sm:hidden">{tab.shortName}</span>
-                        <span className="hidden sm:inline">{tab.name}</span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </nav>
+          <div className="bg-card rounded-lg sm:rounded-xl shadow-sm border border-border mb-4">
+            <div className="relative">
+              <Tabs
+                tabs={tabs}
+                activeTab={activeTab}
+                onChange={setActiveTab}
+                variant="default"
+              />
             </div>
 
-            <div className="p-4 sm:p-6">
+            <div className="p-4 sm:p-6 pb-2">
               {/* Basic Information Tab */}
               {activeTab === 'basic' && (
-                <div className="space-y-6">
+                <div className="space-y-6 pb-4">
                   <div className="flex items-center justify-center mb-6">
                     <div className="relative">
-                      <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">
-                        <Camera className="w-8 h-8 text-gray-400" />
+                      <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center">
+                        <Camera className="w-8 h-8 text-muted-foreground" />
                       </div>
                       <button
                         type="button"
-                        className="absolute bottom-0 right-0 bg-blue-600 rounded-full p-2 text-white hover:bg-blue-700"
+                        className="absolute bottom-0 right-0 bg-primary rounded-full p-2 text-primary-foreground hover:bg-primary/90"
                       >
                         <Camera className="w-4 h-4" />
                       </button>
@@ -425,7 +402,7 @@ export default function AddTeamMemberPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
                         Full Name *
                       </label>
                       <input
@@ -433,14 +410,14 @@ export default function AddTeamMemberPage() {
                         name="fullName"
                         value={formData.fullName}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                         placeholder="John Smith"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
                         Official Email *
                       </label>
                       <input
@@ -448,14 +425,14 @@ export default function AddTeamMemberPage() {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                         placeholder="john.smith@company.com"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
                         Personal Email
                       </label>
                       <input
@@ -463,13 +440,13 @@ export default function AddTeamMemberPage() {
                         name="personalEmail"
                         value={formData.personalEmail}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                         placeholder="john.smith@gmail.com"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
                         Phone Number *
                       </label>
                       <input
@@ -477,14 +454,14 @@ export default function AddTeamMemberPage() {
                         name="phoneNumber"
                         value={formData.phoneNumber}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                         placeholder="+1-234-567-8901"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
                         Date of Birth *
                       </label>
                       <input
@@ -492,73 +469,82 @@ export default function AddTeamMemberPage() {
                         name="dateOfBirth"
                         value={formData.dateOfBirth}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
                         Gender *
                       </label>
-                      <select
+                      <Select
                         name="gender"
                         value={formData.gender}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onValueChange={(value) => handleInputChange({ target: { name: 'gender', value } } as any)}
                         required
                       >
-                        <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                      </select>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Male">Male</SelectItem>
+                          <SelectItem value="Female">Female</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
                         Blood Group
                       </label>
-                      <select
+                      <Select
                         name="bloodGroup"
                         value={formData.bloodGroup}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onValueChange={(value) => handleInputChange({ target: { name: 'bloodGroup', value } } as any)}
                       >
-                        <option value="">Select Blood Group</option>
-                        <option value="A+">A+</option>
-                        <option value="A-">A-</option>
-                        <option value="B+">B+</option>
-                        <option value="B-">B-</option>
-                        <option value="AB+">AB+</option>
-                        <option value="AB-">AB-</option>
-                        <option value="O+">O+</option>
-                        <option value="O-">O-</option>
-                      </select>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Blood Group" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="A+">A+</SelectItem>
+                          <SelectItem value="A-">A-</SelectItem>
+                          <SelectItem value="B+">B+</SelectItem>
+                          <SelectItem value="B-">B-</SelectItem>
+                          <SelectItem value="AB+">AB+</SelectItem>
+                          <SelectItem value="AB-">AB-</SelectItem>
+                          <SelectItem value="O+">O+</SelectItem>
+                          <SelectItem value="O-">O-</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
                         Marital Status *
                       </label>
-                      <select
+                      <Select
                         name="maritalStatus"
                         value={formData.maritalStatus}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onValueChange={(value) => handleInputChange({ target: { name: 'maritalStatus', value } } as any)}
                         required
                       >
-                        <option value="">Select Status</option>
-                        <option value="Single">Single</option>
-                        <option value="Married">Married</option>
-                        <option value="Divorced">Divorced</option>
-                        <option value="Widowed">Widowed</option>
-                      </select>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Single">Single</SelectItem>
+                          <SelectItem value="Married">Married</SelectItem>
+                          <SelectItem value="Divorced">Divorced</SelectItem>
+                          <SelectItem value="Widowed">Widowed</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     {formData.maritalStatus === 'Married' && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-card-foreground mb-2">
                           Wedding Date
                         </label>
                         <input
@@ -566,7 +552,7 @@ export default function AddTeamMemberPage() {
                           name="weddingDate"
                           value={formData.weddingDate}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                         />
                       </div>
                     )}
@@ -576,9 +562,9 @@ export default function AddTeamMemberPage() {
 
               {/* Contact & Address Tab */}
               {activeTab === 'contact' && (
-                <div className="space-y-6">
+                <div className="space-y-6 pb-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
                       Current Address *
                     </label>
                     <textarea
@@ -586,14 +572,14 @@ export default function AddTeamMemberPage() {
                       value={formData.currentAddress}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                       placeholder="Enter current address"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
                       Permanent Address
                     </label>
                     <textarea
@@ -601,7 +587,7 @@ export default function AddTeamMemberPage() {
                       value={formData.permanentAddress}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                       placeholder="Enter permanent address (if different)"
                     />
                   </div>
@@ -615,9 +601,9 @@ export default function AddTeamMemberPage() {
                           setFormData(prev => ({ ...prev, permanentAddress: prev.currentAddress }));
                         }
                       }}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-input text-primary focus:ring-primary"
                     />
-                    <label htmlFor="sameAsCurrentAddress" className="text-sm text-gray-700">
+                    <label htmlFor="sameAsCurrentAddress" className="text-sm text-card-foreground">
                       Same as current address
                     </label>
                   </div>
@@ -626,17 +612,17 @@ export default function AddTeamMemberPage() {
 
               {/* Job Information Tab */}
               {activeTab === 'job' && (
-                <div className="space-y-6">
+                <div className="space-y-6 pb-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
                         Department *
                       </label>
                       <select
                         name="departmentId"
                         value={formData.departmentId}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                         required
                       >
                         <option value="">Select Department</option>
@@ -647,14 +633,14 @@ export default function AddTeamMemberPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
                         Designation *
                       </label>
                       <select
                         name="designationId"
                         value={formData.designationId}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                         required
                       >
                         <option value="">Select Designation</option>
@@ -665,14 +651,14 @@ export default function AddTeamMemberPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
                         Reporting Manager
                       </label>
                       <select
                         name="managerId"
                         value={formData.managerId}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                       >
                         <option value="">Select Manager</option>
                         {managers.map(manager => (
@@ -682,14 +668,14 @@ export default function AddTeamMemberPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
                         Role *
                       </label>
                       <select
                         name="roleId"
                         value={formData.roleId}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                         required
                       >
                         <option value="">Select Role</option>
@@ -700,7 +686,7 @@ export default function AddTeamMemberPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
                         Joining Date *
                       </label>
                       <input
@@ -708,13 +694,13 @@ export default function AddTeamMemberPage() {
                         name="joiningDate"
                         value={formData.joiningDate}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
                         Confirmation Date
                       </label>
                       <input
@@ -722,19 +708,19 @@ export default function AddTeamMemberPage() {
                         name="confirmationDate"
                         value={formData.confirmationDate}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
                         Team Member Type *
                       </label>
                       <select
                         name="employeeType"
                         value={formData.employeeType}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                         required
                       >
                         <option value="">Select Type</option>
@@ -746,7 +732,7 @@ export default function AddTeamMemberPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
                         Work Location
                       </label>
                       <input
@@ -754,7 +740,7 @@ export default function AddTeamMemberPage() {
                         name="workLocation"
                         value={formData.workLocation}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                         placeholder="e.g., New York Office, Remote"
                       />
                     </div>
@@ -766,9 +752,9 @@ export default function AddTeamMemberPage() {
                       name="isLoginEnabled"
                       checked={formData.isLoginEnabled}
                       onChange={handleInputChange}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-input text-primary focus:ring-primary"
                     />
-                    <label className="text-sm text-gray-700">
+                    <label className="text-sm text-card-foreground">
                       Enable login access for this employee
                     </label>
                   </div>
@@ -777,13 +763,13 @@ export default function AddTeamMemberPage() {
 
               {/* Bank & Documents Tab */}
               {activeTab === 'bank' && (
-                <div className="space-y-8">
+                <div className="space-y-3 pb-0">
                   {/* Bank Information Section */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Bank Information</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Bank Information</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-card-foreground mb-2">
                           Bank Name *
                         </label>
                         <input
@@ -791,14 +777,14 @@ export default function AddTeamMemberPage() {
                           name="bankName"
                           value={formData.bankName}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                           placeholder="e.g., State Bank of India"
                           required
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-card-foreground mb-2">
                           Account Number *
                         </label>
                         <input
@@ -806,14 +792,14 @@ export default function AddTeamMemberPage() {
                           name="accountNumber"
                           value={formData.accountNumber}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                           placeholder="Enter account number"
                           required
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-card-foreground mb-2">
                           IFSC Code *
                         </label>
                         <input
@@ -821,7 +807,7 @@ export default function AddTeamMemberPage() {
                           name="ifscCode"
                           value={formData.ifscCode}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                           placeholder="e.g., SBIN0001234"
                           required
                         />
@@ -831,10 +817,10 @@ export default function AddTeamMemberPage() {
 
                   {/* Government Documents Section */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Government Documents</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Government Documents</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-card-foreground mb-2">
                           UAN Number
                         </label>
                         <input
@@ -842,13 +828,13 @@ export default function AddTeamMemberPage() {
                           name="uanNumber"
                           value={formData.uanNumber}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                           placeholder="Universal Account Number"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-card-foreground mb-2">
                           PAN Card Number
                         </label>
                         <input
@@ -856,13 +842,13 @@ export default function AddTeamMemberPage() {
                           name="panCardNumber"
                           value={formData.panCardNumber}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                           placeholder="ABCDE1234F"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-card-foreground mb-2">
                           Aadhar Card Number
                         </label>
                         <input
@@ -870,7 +856,7 @@ export default function AddTeamMemberPage() {
                           name="aadharCardNumber"
                           value={formData.aadharCardNumber}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                           placeholder="1234 5678 9012"
                         />
                       </div>
@@ -879,21 +865,21 @@ export default function AddTeamMemberPage() {
 
                   {/* Document Uploads Section */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Uploads</h3>
-                    <div className="space-y-6">
+                    <h3 className="text-lg font-semibold text-foreground mb-2">Document Uploads</h3>
+                    <div className="space-y-2">
                       {/* Aadhar Card Upload */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-card-foreground mb-2">
                           Aadhar Card
                         </label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
-                          <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                        <div className="border-2 border-dashed border-input rounded-lg p-3 text-center hover:border-muted-foreground transition-colors">
+                          <Upload className="mx-auto h-6 w-6 text-muted-foreground" />
                           <div className="mt-2">
                             <label htmlFor="aadharCardUpload" className="cursor-pointer">
-                              <span className="text-sm font-medium text-gray-900">
+                              <span className="text-sm font-medium text-foreground">
                                 Upload Aadhar Card
                               </span>
-                              <span className="block text-xs text-gray-500 mt-1">
+                              <span className="block text-xs text-muted-foreground mt-1">
                                 PNG, JPG, PDF up to 10MB
                               </span>
                             </label>
@@ -912,20 +898,20 @@ export default function AddTeamMemberPage() {
                         {formData.aadharCardUpload.length > 0 && (
                           <div className="mt-3 space-y-2">
                             {formData.aadharCardUpload.map((doc, index: number) => (
-                              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                                 <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                                    <Upload className="w-4 h-4 text-orange-600" />
+                                  <div className="w-8 h-8 bg-destructive/10 rounded-full flex items-center justify-center">
+                                    <Upload className="w-4 h-4 text-destructive" />
                                   </div>
                                   <div>
-                                    <p className="text-sm font-medium text-gray-900">{doc.name}</p>
-                                    <p className="text-xs text-gray-500">{(doc.size / 1024).toFixed(1)} KB</p>
+                                    <p className="text-sm font-medium text-foreground">{doc.name}</p>
+                                    <p className="text-xs text-muted-foreground">{(doc.size / 1024).toFixed(1)} KB</p>
                                   </div>
                                 </div>
                                 <button
                                   type="button"
                                   onClick={() => removeFile('aadharCardUpload', index)}
-                                  className="text-red-500 hover:text-red-700"
+                                  className="text-destructive hover:text-destructive/80"
                                 >
                                   <X className="w-4 h-4" />
                                 </button>
@@ -937,17 +923,17 @@ export default function AddTeamMemberPage() {
 
                       {/* PAN Card Upload */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-card-foreground mb-2">
                           PAN Card
                         </label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
-                          <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                        <div className="border-2 border-dashed border-input rounded-lg p-3 text-center hover:border-muted-foreground transition-colors">
+                          <Upload className="mx-auto h-6 w-6 text-muted-foreground" />
                           <div className="mt-2">
                             <label htmlFor="panCardUpload" className="cursor-pointer">
-                              <span className="text-sm font-medium text-gray-900">
+                              <span className="text-sm font-medium text-foreground">
                                 Upload PAN Card
                               </span>
-                              <span className="block text-xs text-gray-500 mt-1">
+                              <span className="block text-xs text-muted-foreground mt-1">
                                 PNG, JPG, PDF up to 10MB
                               </span>
                             </label>
@@ -966,20 +952,20 @@ export default function AddTeamMemberPage() {
                         {formData.panCardUpload.length > 0 && (
                           <div className="mt-3 space-y-2">
                             {formData.panCardUpload.map((doc, index: number) => (
-                              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                                 <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                                    <Upload className="w-4 h-4 text-green-600" />
+                                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                    <Upload className="w-4 h-4 text-primary" />
                                   </div>
                                   <div>
-                                    <p className="text-sm font-medium text-gray-900">{doc.name}</p>
-                                    <p className="text-xs text-gray-500">{(doc.size / 1024).toFixed(1)} KB</p>
+                                    <p className="text-sm font-medium text-foreground">{doc.name}</p>
+                                    <p className="text-xs text-muted-foreground">{(doc.size / 1024).toFixed(1)} KB</p>
                                   </div>
                                 </div>
                                 <button
                                   type="button"
                                   onClick={() => removeFile('panCardUpload', index)}
-                                  className="text-red-500 hover:text-red-700"
+                                  className="text-destructive hover:text-destructive/80"
                                 >
                                   <X className="w-4 h-4" />
                                 </button>
@@ -991,17 +977,17 @@ export default function AddTeamMemberPage() {
 
                       {/* Bank Passbook Upload */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-card-foreground mb-2">
                           Bank Passbook/Statement
                         </label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
-                          <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                        <div className="border-2 border-dashed border-input rounded-lg p-3 text-center hover:border-muted-foreground transition-colors">
+                          <Upload className="mx-auto h-6 w-6 text-muted-foreground" />
                           <div className="mt-2">
                             <label htmlFor="bankPassbookUpload" className="cursor-pointer">
-                              <span className="text-sm font-medium text-gray-900">
+                              <span className="text-sm font-medium text-foreground">
                                 Upload Bank Passbook/Statement
                               </span>
-                              <span className="block text-xs text-gray-500 mt-1">
+                              <span className="block text-xs text-muted-foreground mt-1">
                                 PNG, JPG, PDF up to 10MB
                               </span>
                             </label>
@@ -1020,20 +1006,20 @@ export default function AddTeamMemberPage() {
                         {formData.bankPassbookUpload.length > 0 && (
                           <div className="mt-3 space-y-2">
                             {formData.bankPassbookUpload.map((doc, index: number) => (
-                              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                                 <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <Upload className="w-4 h-4 text-blue-600" />
+                                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                    <Upload className="w-4 h-4 text-primary" />
                                   </div>
                                   <div>
-                                    <p className="text-sm font-medium text-gray-900">{doc.name}</p>
-                                    <p className="text-xs text-gray-500">{(doc.size / 1024).toFixed(1)} KB</p>
+                                    <p className="text-sm font-medium text-foreground">{doc.name}</p>
+                                    <p className="text-xs text-muted-foreground">{(doc.size / 1024).toFixed(1)} KB</p>
                                   </div>
                                 </div>
                                 <button
                                   type="button"
                                   onClick={() => removeFile('bankPassbookUpload', index)}
-                                  className="text-red-500 hover:text-red-700"
+                                  className="text-destructive hover:text-destructive/80"
                                 >
                                   <X className="w-4 h-4" />
                                 </button>
@@ -1049,32 +1035,33 @@ export default function AddTeamMemberPage() {
 
               {/* Family Details Tab - Only for Married */}
               {activeTab === 'family' && formData.maritalStatus === 'Married' && (
-                <div className="space-y-6">
+                <div className="space-y-6 pb-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Family Members</h3>
-                      <p className="text-sm text-gray-500">Add spouse and children details for dependency and nomination</p>
+                      <h3 className="text-lg font-semibold text-foreground">Family Members</h3>
+                      <p className="text-sm text-muted-foreground">Add spouse and children details for dependency and nomination</p>
                     </div>
-                    <button
+                    <Button
                       type="button"
                       onClick={addFamilyMember}
-                      className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                      size="sm"
+                      className="flex items-center space-x-2"
                     >
                       <Users className="w-4 h-4" />
                       <span>Add Family Member</span>
-                    </button>
+                    </Button>
                   </div>
 
                   {formData.familyMembers.length > 0 ? (
                     <div className="space-y-4">
                       {formData.familyMembers.map((member, index: number) => (
-                        <div key={member.id} className="p-4 border border-gray-200 rounded-lg space-y-4">
+                        <div key={member.id} className="p-4 border border-border rounded-lg space-y-4">
                           <div className="flex items-center justify-between">
-                            <h4 className="font-medium text-gray-900">Family Member {index + 1}</h4>
+                            <h4 className="font-medium text-foreground">Family Member {index + 1}</h4>
                             <button
                               type="button"
                               onClick={() => removeFamilyMember(index)}
-                              className="text-red-500 hover:text-red-700"
+                              className="text-destructive hover:text-destructive/80"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -1082,27 +1069,27 @@ export default function AddTeamMemberPage() {
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                              <label className="block text-sm font-medium text-card-foreground mb-2">
                                 Full Name *
                               </label>
                               <input
                                 type="text"
                                 value={member.fullName}
                                 onChange={(e) => updateFamilyMember(index, 'fullName', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                                 placeholder="Enter full name"
                                 required
                               />
                             </div>
 
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                              <label className="block text-sm font-medium text-card-foreground mb-2">
                                 Relationship *
                               </label>
                               <select
                                 value={member.relationship}
                                 onChange={(e) => updateFamilyMember(index, 'relationship', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                                 required
                               >
                                 <option value="">Select Relationship</option>
@@ -1114,26 +1101,26 @@ export default function AddTeamMemberPage() {
                             </div>
 
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                              <label className="block text-sm font-medium text-card-foreground mb-2">
                                 Date of Birth *
                               </label>
                               <input
                                 type="date"
                                 value={member.dateOfBirth}
                                 onChange={(e) => updateFamilyMember(index, 'dateOfBirth', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                                 required
                               />
                             </div>
 
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                              <label className="block text-sm font-medium text-card-foreground mb-2">
                                 Gender *
                               </label>
                               <select
                                 value={member.gender}
                                 onChange={(e) => updateFamilyMember(index, 'gender', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                                 required
                               >
                                 <option value="">Select Gender</option>
@@ -1150,9 +1137,9 @@ export default function AddTeamMemberPage() {
                                 type="checkbox"
                                 checked={member.isNominee}
                                 onChange={(e) => updateFamilyMember(index, 'isNominee', e.target.checked)}
-                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                className="rounded border-input text-primary focus:ring-primary"
                               />
-                              <span className="text-sm text-gray-700">Nominee</span>
+                              <span className="text-sm text-card-foreground">Nominee</span>
                             </label>
 
                             <label className="flex items-center space-x-2">
@@ -1160,19 +1147,19 @@ export default function AddTeamMemberPage() {
                                 type="checkbox"
                                 checked={member.isDependent}
                                 onChange={(e) => updateFamilyMember(index, 'isDependent', e.target.checked)}
-                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                className="rounded border-input text-primary focus:ring-primary"
                               />
-                              <span className="text-sm text-gray-700">Dependent</span>
+                              <span className="text-sm text-card-foreground">Dependent</span>
                             </label>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 bg-gray-50 rounded-lg">
-                      <Users className="mx-auto h-12 w-12 text-gray-400" />
-                      <h3 className="mt-2 text-sm font-medium text-gray-900">No family members added</h3>
-                      <p className="mt-1 text-sm text-gray-500">
+                    <div className="text-center py-8 bg-muted/50 rounded-lg">
+                      <Users className="mx-auto h-12 w-12 text-muted-foreground" />
+                      <h3 className="mt-2 text-sm font-medium text-foreground">No family members added</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
                         Click &quot;Add Family Member&quot; to add spouse and children details
                       </p>
                     </div>
@@ -1182,12 +1169,12 @@ export default function AddTeamMemberPage() {
 
               {/* Salary Information Tab */}
               {activeTab === 'salary' && (
-                <div className="space-y-6">
+                <div className="space-y-6 pb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Salary Structure</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Salary Structure</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-card-foreground mb-2">
                           Annual CTC *
                         </label>
                         <input
@@ -1195,17 +1182,17 @@ export default function AddTeamMemberPage() {
                           name="annualCTC"
                           value={formData.annualCTC}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                           placeholder="Enter annual CTC amount"
                           required
                         />
                         <div className="flex items-center justify-between mt-2">
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-muted-foreground">
                             Components calculated using current HR Settings
                           </p>
                           <Link
                             href="/hrm/settings"
-                            className="text-xs text-blue-600 hover:text-blue-800 underline"
+                            className="text-xs text-primary hover:text-blue-800 underline"
                           >
                             Modify HR Settings
                           </Link>
@@ -1216,10 +1203,10 @@ export default function AddTeamMemberPage() {
 
                   {formData.annualCTC && (
                     <div>
-                      <h4 className="text-md font-semibold text-gray-900 mb-4">Salary Breakdown (Auto-calculated)</h4>
+                      <h4 className="text-md font-semibold text-foreground mb-4">Salary Breakdown (Auto-calculated)</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-card-foreground mb-2">
                             Basic Salary ({hrSettings?.basicSalaryPercentage || 40}% of CTC)
                           </label>
                           <input
@@ -1227,12 +1214,12 @@ export default function AddTeamMemberPage() {
                             name="basicSalary"
                             value={formData.basicSalary}
                             readOnly
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
+                            className="w-full px-3 py-2 border border-input rounded-lg bg-muted/50 text-card-foreground"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-card-foreground mb-2">
                             HRA ({hrSettings?.hraPercentage || 50}% of Basic)
                           </label>
                           <input
@@ -1240,12 +1227,12 @@ export default function AddTeamMemberPage() {
                             name="hra"
                             value={formData.hra}
                             readOnly
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
+                            className="w-full px-3 py-2 border border-input rounded-lg bg-muted/50 text-card-foreground"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-card-foreground mb-2">
                             PF Deduction ({hrSettings?.pfDeductionPercentage || 12}% of Basic)
                           </label>
                           <input
@@ -1253,12 +1240,12 @@ export default function AddTeamMemberPage() {
                             name="pfDeduction"
                             value={formData.pfDeduction}
                             readOnly
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
+                            className="w-full px-3 py-2 border border-input rounded-lg bg-muted/50 text-card-foreground"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-card-foreground mb-2">
                             Professional Tax (₹{hrSettings?.professionalTaxAmount?.toLocaleString() || '2,400'} Annual)
                           </label>
                           <input
@@ -1266,12 +1253,12 @@ export default function AddTeamMemberPage() {
                             name="professionalTax"
                             value={formData.professionalTax}
                             readOnly
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
+                            className="w-full px-3 py-2 border border-input rounded-lg bg-muted/50 text-card-foreground"
                           />
                         </div>
 
                         <div className="sm:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-card-foreground mb-2">
                             Other Allowances (Remaining Amount)
                           </label>
                           <input
@@ -1279,29 +1266,29 @@ export default function AddTeamMemberPage() {
                             name="otherAllowances"
                             value={formData.otherAllowances}
                             readOnly
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
+                            className="w-full px-3 py-2 border border-input rounded-lg bg-muted/50 text-card-foreground"
                           />
                         </div>
                       </div>
 
                       {/* Project Cost Information */}
-                      <div className="mt-6 pt-6 border-t border-gray-200">
-                        <h4 className="text-md font-semibold text-gray-900 mb-4">Project Cost Information</h4>
+                      <div className="mt-6 pt-6 border-t border-border">
+                        <h4 className="text-md font-semibold text-foreground mb-4">Project Cost Information</h4>
 
                         <div className="space-y-4">
                           {/* Cost Type Toggle */}
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-3">
+                            <label className="block text-sm font-medium text-card-foreground mb-3">
                               Cost Calculation Type
                             </label>
-                            <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1 w-fit">
+                            <div className="flex items-center space-x-1 bg-muted rounded-lg p-1 w-fit">
                               <button
                                 type="button"
                                 onClick={() => setFormData({...formData, costType: 'hour', costRate: ''})}
                                 className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                                   formData.costType === 'hour'
-                                    ? 'bg-blue-600 text-white shadow-sm'
-                                    : 'text-gray-600 hover:text-gray-800'
+                                    ? 'bg-primary text-primary-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground'
                                 }`}
                               >
                                 Per Hour
@@ -1311,8 +1298,8 @@ export default function AddTeamMemberPage() {
                                 onClick={() => setFormData({...formData, costType: 'day', costRate: ''})}
                                 className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                                   formData.costType === 'day'
-                                    ? 'bg-blue-600 text-white shadow-sm'
-                                    : 'text-gray-600 hover:text-gray-800'
+                                    ? 'bg-primary text-primary-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground'
                                 }`}
                               >
                                 Per Day
@@ -1322,7 +1309,7 @@ export default function AddTeamMemberPage() {
 
                           {/* Cost Rate Input */}
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-card-foreground mb-2">
                               Cost {formData.costType === 'hour' ? 'per Hour' : 'per Day'} (₹)
                             </label>
                             <input
@@ -1330,12 +1317,12 @@ export default function AddTeamMemberPage() {
                               name="costRate"
                               value={formData.costRate}
                               onChange={handleInputChange}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                               placeholder={`Enter ${formData.costType === 'hour' ? 'hourly' : 'daily'} cost`}
                               min="0"
                               step="0.01"
                             />
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               {formData.costType === 'hour'
                                 ? 'Hourly rate for project cost calculation'
                                 : 'Daily rate for project cost calculation (8-hour workday)'}
@@ -1343,21 +1330,21 @@ export default function AddTeamMemberPage() {
                           </div>
                         </div>
 
-                        <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                          <p className="text-xs text-gray-600">
+                        <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+                          <p className="text-xs text-muted-foreground">
                             💡 <strong>Note:</strong> This rate will be used in the Project Management module for resource cost estimation and project budgeting.
                           </p>
                         </div>
                       </div>
 
-                      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                      <div className="mt-6 p-4 bg-primary/10 rounded-lg">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-blue-900">Total Annual CTC:</span>
-                          <span className="text-lg font-bold text-blue-900">₹{Number(formData.annualCTC).toLocaleString()}</span>
+                          <span className="text-sm font-medium text-primary">Total Annual CTC:</span>
+                          <span className="text-lg font-bold text-primary">₹{Number(formData.annualCTC).toLocaleString()}</span>
                         </div>
                         <div className="flex items-center justify-between mt-2">
-                          <span className="text-sm font-medium text-blue-900">Monthly Gross Salary:</span>
-                          <span className="text-md font-semibold text-blue-900">₹{Math.round(Number(formData.annualCTC) / 12).toLocaleString()}</span>
+                          <span className="text-sm font-medium text-primary">Monthly Gross Salary:</span>
+                          <span className="text-md font-semibold text-primary">₹{Math.round(Number(formData.annualCTC) / 12).toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
@@ -1367,34 +1354,76 @@ export default function AddTeamMemberPage() {
             </div>
           </div>
 
-          {/* Form Actions - Single Row Layout */}
-          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium text-center"
-              >
-                Cancel
-              </button>
+          {/* Form Actions - Mobile Responsive - Only show when on last tab (salary) */}
+          {activeTab === 'salary' && (
+            <div className="bg-card rounded-xl p-4 sm:p-6 shadow-sm border border-border">
+              {/* Mobile: Stacked buttons */}
+              <div className="flex flex-col sm:hidden space-y-3">
+                <Button
+                  type="submit"
+                  variant="default"
+                  disabled={isLoading}
+                  className="w-full"
+                  size="default"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {isLoading ? 'Creating...' : 'Create Team Member'}
+                </Button>
 
-              <button
-                type="button"
-                className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors font-medium text-center"
-              >
-                Save as Draft
-              </button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full"
+                  size="default"
+                >
+                  Save as Draft
+                </Button>
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="flex-1 flex items-center justify-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm sm:text-base"
-              >
-                <Save className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="truncate">{isLoading ? 'Creating...' : 'Create Team Member'}</span>
-              </button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.back()}
+                  className="w-full"
+                  size="default"
+                >
+                  Cancel
+                </Button>
+              </div>
+
+              {/* Desktop: Single row layout */}
+              <div className="hidden sm:flex items-center space-x-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => router.back()}
+                  className="flex-1"
+                  size="default"
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="flex-1"
+                  size="default"
+                >
+                  Save as Draft
+                </Button>
+
+                <Button
+                  type="submit"
+                  variant="default"
+                  disabled={isLoading}
+                  className="flex-1"
+                  size="default"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {isLoading ? 'Creating...' : 'Create Team Member'}
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </form>
         )}
       </div>

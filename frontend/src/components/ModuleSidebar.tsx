@@ -1,6 +1,6 @@
 'use client';
 
-import { X, Home, Users, UserPlus, Building2, Award, Calendar, FileText, IndianRupee, BarChart3, Settings } from 'lucide-react';
+import { X, Home, Users, UserPlus, Building2, Award, Calendar, FileText, IndianRupee, BarChart3, Settings, KanbanSquare, ListTodo, Clock, GitBranch, Zap, BookOpen, Share2, MapPin, Ticket, ClipboardList, LifeBuoy, TestTube2, FileSpreadsheet, UsersRound, Package, Archive, PlusCircle, CreditCard, FolderKanban, DollarSign, Briefcase, Target, Upload, MessageSquare, Video, CalendarCheck, FileBarChart, Network, Mail, UserCog } from 'lucide-react';
 import Link from 'next/link';
 
 interface ModuleSidebarProps {
@@ -18,9 +18,11 @@ const ModuleSidebar = ({ isOpen, onClose, currentModule, currentPath }: ModuleSi
       items: [
         { name: 'Dashboard', icon: Home, path: '/dashboard' },
         { name: 'HRM', icon: Users, path: '/hrm' },
-        { name: 'CRM', icon: Building2, path: '/crm' },
-        { name: 'Projects', icon: FileText, path: '/projects' },
-        { name: 'Tasks', icon: Calendar, path: '/tasks' },
+        { name: 'CRM', icon: Building2, path: '/CRM' },
+        { name: 'Projects & Tasks', icon: FileText, path: '/projectmanagement' },
+        { name: 'Ticket Management', icon: Ticket, path: '/ticketmanagement' },
+        { name: 'Assets', icon: Package, path: '/assets' },
+        // { name: 'Tasks', icon: Calendar, path: '/tasks' },
         { name: 'Finance', icon: IndianRupee, path: '/finance' },
       ]
     },
@@ -30,30 +32,48 @@ const ModuleSidebar = ({ isOpen, onClose, currentModule, currentPath }: ModuleSi
         { name: 'HRM Dashboard', icon: Home, path: '/hrm' },
         { name: 'All Team Members', icon: Users, path: '/hrm/employees' },
         { name: 'Add Team Member', icon: UserPlus, path: '/hrm/employees/add' },
-        { name: 'Departments', icon: Building2, path: '/hrm/departments' },
-        { name: 'Designations', icon: Award, path: '/hrm/designations' },
-        { name: 'Leave Management', icon: Calendar, path: '/hrm/leaves' },
-        { name: 'Attendance', icon: BarChart3, path: '/hrm/attendance' },
+        { name: 'Leave & Attendance', icon: Calendar, path: '/hrm/leave-attendance' },
         { name: 'Payroll', icon: IndianRupee, path: '/hrm/payroll' },
+        // { name: 'Departments', icon: Building2, path: '/hrm/departments' },
+        // { name: 'Designations', icon: Award, path: '/hrm/designations' },
         { name: 'HR Settings', icon: Settings, path: '/hrm/settings' },
       ]
     },
-    crm: {
+   CRM : {
       title: 'CRM Menu',
       items: [
-        { name: 'CRM Dashboard', icon: Home, path: '/crm' },
-        { name: 'Customers', icon: Users, path: '/crm/customers' },
-        { name: 'Leads', icon: UserPlus, path: '/crm/leads' },
-        { name: 'Sales Pipeline', icon: BarChart3, path: '/crm/pipeline' },
+        { name: 'CRM Dashboard', icon: Home, path: '/CRM' },
+        { name: 'Leads', icon: Target, path: '/CRM/leads' },
+        { name: 'Create Lead', icon: UserPlus, path: '/CRM/create-lead' },
+        { name: 'Clients', icon: Briefcase, path: '/CRM/clients' },
+        { name: 'Activity', icon: CalendarCheck, path: '/CRM/activity' },
+        { name: 'Tasks', icon: ListTodo, path: '/CRM/tasks' },
+        { name: 'Events', icon: Calendar, path: '/CRM/events' },
+        { name: 'Schedule', icon: Clock, path: '/CRM/schedule' },
+        { name: 'Drip Sequence', icon: Network, path: '/CRM/drip-sequence' },
+        { name: 'Proposals', icon: FileText, path: '/CRM/proposals' },
+        { name: 'Add Quotation', icon: PlusCircle, path: '/CRM/add-quotation' },
+        { name: 'Reports', icon: FileBarChart, path: '/CRM/reports' },
+        { name: 'Google Calendar', icon: CalendarCheck, path: '/CRM/google-calendar' },
+        { name: 'Messages', icon: MessageSquare, path: '/CRM/message-master' },
+        { name: 'Bulk Upload', icon: Upload, path: '/CRM/bulk-upload' },
+        { name: 'Manage Users', icon: UserCog, path: '/CRM/manage-users' },
+        { name: 'Masters', icon: Settings, path: '/CRM/masters' },
       ]
     },
-    projects: {
-      title: 'Projects Menu',
+     projectmanagement: {
+      title: 'Project Management',
       items: [
-        { name: 'Projects Dashboard', icon: Home, path: '/projects' },
-        { name: 'All Projects', icon: FileText, path: '/projects/list' },
-        { name: 'Create Project', icon: UserPlus, path: '/projects/create' },
-        { name: 'Project Reports', icon: BarChart3, path: '/projects/reports' },
+        { name: 'PM Dashboard', icon: Home, path: '/projectmanagement' },
+        { name: 'All Projects', icon: FileText, path: '/projectmanagement/projects' },
+        // { name: 'Board View', icon: KanbanSquare, path: '/projectmanagement/board' },
+        // { name: 'Sprints', icon: Zap, path: '/projectmanagement/sprints' },
+        // { name: 'Gantt Chart', icon: GitBranch, path: '/projectmanagement/gantt' },
+        // { name: 'Time Log', icon: Clock, path: '/projectmanagement/time-log' },
+        { name: 'Reports', icon: BarChart3, path: '/projectmanagement/reports' },
+        { name: 'Wiki', icon: BookOpen, path: '/projectmanagement/wiki' },
+        // { name: 'Integrations', icon: Share2, path: '/projectmanagement/integrations' },
+        { name: 'Automation', icon: Zap, path: '/projectmanagement/automation' },
       ]
     },
     tasks: {
@@ -73,6 +93,32 @@ const ModuleSidebar = ({ isOpen, onClose, currentModule, currentPath }: ModuleSi
         { name: 'Expenses', icon: IndianRupee, path: '/finance/expenses' },
         { name: 'Reports', icon: BarChart3, path: '/finance/reports' },
       ]
+    },
+    ticketmanagement: {
+      title: 'Ticket Management',
+      items: [
+        { name: 'TM Dashboard', icon: Home, path: '/ticketmanagement' },
+        { name: 'My Work', icon: ClipboardList, path: '/ticketmanagement/my-work' },
+        { name: 'All Tickets', icon: Ticket, path: '/ticketmanagement/tickets' },
+        { name: 'Create Ticket', icon: UserPlus, path: '/ticketmanagement/tickets/create' },
+        { name: 'Support Center', icon: LifeBuoy, path: '/ticketmanagement/support' },
+        { name: 'Testing/QC', icon: TestTube2, path: '/ticketmanagement/testing' },
+        { name: 'Time Reports', icon: FileSpreadsheet, path: '/ticketmanagement/reports' },
+        { name: 'Customers', icon: UsersRound, path: '/ticketmanagement/customers' },
+      ]
+    },
+    assets: {
+      title: 'Asset Management',
+      items: [
+        { name: 'Assets Dashboard', icon: Home, path: '/assets' },
+        { name: 'All Assets', icon: Archive, path: '/assets/all' },
+        { name: 'Add Purchase', icon: PlusCircle, path: '/assets/add' },
+        { name: 'My Assets', icon: Users, path: '/assets/my-assets' },
+        { name: 'Categories', icon: FolderKanban, path: '/assets/categories' },
+        { name: 'Expenses', icon: DollarSign, path: '/assets/expenses' },
+        { name: 'Subscriptions', icon: CreditCard, path: '/assets/subscriptions' },
+        { name: 'Reports', icon: BarChart3, path: '/assets/reports' },
+      ]
     }
   };
 
@@ -81,73 +127,88 @@ const ModuleSidebar = ({ isOpen, onClose, currentModule, currentPath }: ModuleSi
   if (!isOpen) return null;
 
   return (
-    <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out">
-      <div className="flex flex-col h-full">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">{config.title}</h2>
+    <div className="fixed inset-x-0 bottom-0 z-50 transform transition-transform duration-300 ease-in-out">
+      {/* Modern Bottom Sheet - Compact */}
+      <div className="bg-card rounded-t-xl shadow-2xl border-t border-border max-h-[70vh] flex flex-col">
+        {/* Drag Handle */}
+        <div className="flex justify-center pt-2 pb-1">
+          <div className="w-10 h-1 bg-muted rounded-full"></div>
+        </div>
+
+        {/* Header - Compact */}
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
+          <h2 className="text-base font-semibold text-foreground">{config.title}</h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-1.5 rounded-full hover:bg-accent transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
 
-        {/* Menu Items */}
+        {/* Menu Items - Compact Mobile-First */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-4 space-y-2">
-            {config.items.map((item, index) => {
-              const IconComponent = item.icon;
-              const isActive = currentPath === item.path ||
-                              (item.path !== '/dashboard' && currentPath.startsWith(item.path));
+          <div className="p-3">
+            {/* Compact List for Mobile */}
+            <div className="space-y-1">
+              {config.items.map((item, index) => {
+                const IconComponent = item.icon;
+                const isActive = currentPath === item.path ||
+                                (item.path !== '/dashboard' && currentPath.startsWith(item.path));
 
-              return (
-                <Link
-                  key={index}
-                  href={item.path}
-                  onClick={onClose}
-                  className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <IconComponent className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
-                  <span className="font-medium">{item.name}</span>
-                </Link>
-              );
-            })}
+                return (
+                  <Link
+                    key={index}
+                    href={item.path}
+                    onClick={onClose}
+                    className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                      isActive
+                        ? 'bg-primary/10 text-primary border border-primary/20'
+                        : 'text-foreground hover:bg-accent border border-transparent hover:border-border'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
+                      isActive ? 'bg-primary/20' : 'bg-muted'
+                    }`}>
+                      <IconComponent className={`w-4 h-4 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                    </div>
+                    <span className={`font-medium text-sm ${isActive ? 'text-primary' : 'text-foreground'}`}>
+                      {item.name}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
-          <div className="text-center">
-            <p className="text-xs text-gray-500 mb-2">Current Module</p>
-            <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-              currentModule === 'dashboard' ? 'bg-gray-200 text-gray-700' :
-              currentModule === 'hrm' ? 'bg-blue-100 text-blue-700' :
-              currentModule === 'crm' ? 'bg-green-100 text-green-700' :
-              currentModule === 'projects' ? 'bg-purple-100 text-purple-700' :
-              currentModule === 'tasks' ? 'bg-orange-100 text-orange-700' :
-              'bg-red-100 text-red-700'
+        {/* Footer - Ultra Compact */}
+        <div className="px-4 py-2.5 border-t border-border bg-muted/50">
+          <div className="flex items-center justify-between">
+            {/* Current Module Badge */}
+            <div className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${
+              currentModule === 'dashboard' ? 'bg-muted text-muted-foreground' :
+              currentModule === 'hrm' ? 'bg-primary/10 text-primary' :
+              currentModule === 'CRM' ? 'bg-primary/10 text-primary border border-primary/20' :
+              currentModule === 'projects' ? 'bg-primary/10 text-primary border border-primary/20' :
+              currentModule === 'tasks' ? 'bg-primary/10 text-primary border border-primary/20' :
+              'bg-primary/10 text-primary border border-primary/20'
             }`}>
               {currentModule.toUpperCase()}
             </div>
-          </div>
 
-          {/* Quick Access to Main Dashboard */}
-          {currentModule !== 'dashboard' && (
-            <Link
-              href="/dashboard"
-              onClick={onClose}
-              className="flex items-center justify-center space-x-2 mt-3 p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm"
-            >
-              <Home className="w-4 h-4" />
-              <span>Back to Dashboard</span>
-            </Link>
-          )}
+            {/* Quick Dashboard Access */}
+            {currentModule !== 'dashboard' && (
+              <Link
+                href="/dashboard"
+                onClick={onClose}
+                className="flex items-center space-x-1 px-2.5 py-1 bg-muted hover:bg-accent rounded-md transition-colors text-xs font-medium text-foreground"
+              >
+                <Home className="w-3 h-3" />
+                <span>Home</span>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </div>

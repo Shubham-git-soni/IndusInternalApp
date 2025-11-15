@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Indus.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+880b4dcb99136cf8024ce10ca4af1ce42ade045b")]
 [assembly: System.Reflection.AssemblyProductAttribute("Indus.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Indus.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

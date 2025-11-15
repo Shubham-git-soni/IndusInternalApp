@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
@@ -22,28 +24,20 @@ export default function HomePage() {
 
   // Show loading while checking authentication
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
-      <div className="text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4 animate-pulse">
-          <svg
-            className="w-8 h-8 text-white animate-spin"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
-        </div>
-        <h1 className="text-xl font-semibold text-gray-900 mb-2">
-          IndusInternalApp
-        </h1>
-        <p className="text-gray-600">Loading...</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/5 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="flex flex-col items-center space-y-4 p-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-full">
+            <Loader2 className="w-8 h-8 text-primary-foreground animate-spin" />
+          </div>
+          <div className="text-center space-y-2">
+            <h1 className="text-xl font-semibold">
+              IndusInternalApp
+            </h1>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

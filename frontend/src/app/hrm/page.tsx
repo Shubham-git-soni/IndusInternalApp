@@ -1,15 +1,28 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, UserPlus, Building2, Award, Clock, TrendingUp, Plus, Search } from 'lucide-react';
-import DashboardLayout from '@/components/DashboardLayout';
-import FilterExportBar from '@/components/FilterExportBar';
 import Link from 'next/link';
+import {
+  Users,
+  UserPlus,
+  Building2,
+  Award,
+  Clock,
+  MoreHorizontal,
+  CalendarCheck,
+  DollarSign
+} from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import DashboardLayout from '@/components/DashboardLayout';
+import KPICard from '@/components/KPICard';
+import Modal from '@/components/Modal';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiClient, type EmployeeStats } from '@/services/api';
 
-export default function HRMPage() {
-  const [activityFilter, setActivityFilter] = useState('all');
-  const [timeFilter, setTimeFilter] = useState('all');
+const HRMPage = () => {
+  // --- STATE ---
+  const [showAllActions, setShowAllActions] = useState(false);
+  const [showActionsModal, setShowActionsModal] = useState(false);
   const [stats, setStats] = useState<EmployeeStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -21,7 +34,6 @@ export default function HRMPage() {
         setStats(employeeStats);
       } catch (error) {
         console.error('Failed to fetch employee stats:', error);
-        // No fallback - show zero values if API fails
         setStats({
           totalEmployees: 0,
           activeEmployees: 0,
@@ -36,218 +48,281 @@ export default function HRMPage() {
     fetchStats();
   }, []);
 
-  // Dynamic HRM stats based on backend data
-  const hrmStats = stats ? [
-    { title: "Total Team Members", value: stats.totalEmployees.toString(), icon: Users, color: "bg-blue-500", change: `${stats.activeEmployees} active` },
-    { title: "New Hires", value: stats.newThisMonth.toString(), icon: UserPlus, color: "bg-green-500", change: "This month" },
-    { title: "Departments", value: stats.totalDepartments.toString(), icon: Building2, color: "bg-purple-500", change: "Active" },
-    { title: "Pending Leaves", value: "15", icon: Clock, color: "bg-orange-500", change: "Need approval" }
-  ] : [];
-
-  const quickActions = [
-    { name: 'Add Team Member', href: '/hrm/employees/add', icon: UserPlus, color: 'bg-blue-500' },
-    { name: 'View All Team Members', href: '/hrm/employees', icon: Users, color: 'bg-green-500' },
-    { name: 'Departments', href: '/hrm/departments', icon: Building2, color: 'bg-purple-500' },
-    { name: 'Designations', href: '/hrm/designations', icon: Award, color: 'bg-orange-500' }
+  // Mock data for HRM performance chart
+  const performanceData = [
+    { month: 'Jan', hires: 5, leaves: 2 },
+    { month: 'Feb', hires: 8, leaves: 1 },
+    { month: 'Mar', hires: 6, leaves: 3 },
+    { month: 'Apr', hires: 10, leaves: 2 },
   ];
 
-  const recentActivities = [
-    { activity: "John Smith joined as Software Engineer", time: "2 hours ago", type: "hire", employeeName: "John Smith", department: "Engineering" },
-    { activity: "Sarah Wilson updated her profile", time: "4 hours ago", type: "update", employeeName: "Sarah Wilson", department: "Engineering" },
-    { activity: "Mike Johnson applied for leave", time: "6 hours ago", type: "leave", employeeName: "Mike Johnson", department: "Human Resources" },
-    { activity: "New department 'Data Science' created", time: "1 day ago", type: "department", employeeName: "Admin", department: "Administration" },
-    { activity: "Emily Davis completed onboarding", time: "1 day ago", type: "onboarding", employeeName: "Emily Davis", department: "Marketing" },
-    { activity: "Robert Chen submitted expense report", time: "2 days ago", type: "expense", employeeName: "Robert Chen", department: "Engineering" },
-    { activity: "Lisa Brown approved leave request", time: "2 days ago", type: "approval", employeeName: "Lisa Brown", department: "Management" },
-    { activity: "New team member handbook published", time: "3 days ago", type: "policy", employeeName: "HR Team", department: "Human Resources" }
+  // Mock data for KPI charts
+  const teamChartData = [
+    { day: 1, value: 40 },
+    { day: 2, value: 42 },
+    { day: 3, value: 43 },
+    { day: 4, value: 45 },
   ];
 
-  // Filter activities
-  const filteredActivities = recentActivities.filter(activity => {
-    const matchesType = activityFilter === 'all' || activity.type === activityFilter;
-    const matchesTime = timeFilter === 'all' ||
-      (timeFilter === 'today' && activity.time.includes('hours')) ||
-      (timeFilter === 'week' && (activity.time.includes('hours') || activity.time.includes('1 day'))) ||
-      (timeFilter === 'month');
-    return matchesType && matchesTime;
-  });
+  const hiresChartData = [
+    { day: 1, value: 2 },
+    { day: 2, value: 3 },
+    { day: 3, value: 4 },
+    { day: 4, value: 5 },
+  ];
 
-  // Handle export for activities
-  const handleActivitiesExport = (format: 'excel' | 'csv' | 'pdf') => {
-    const dataToExport = filteredActivities.map(activity => ({
-      'Activity': activity.activity,
-      'Type': activity.type,
-      'Team Member': activity.employeeName,
-      'Department': activity.department,
-      'Time': activity.time
-    }));
-    alert(`Exporting ${filteredActivities.length} activities to ${format.toUpperCase()} format...`);
-    console.log('Activities data to export:', dataToExport);
+  const departmentsChartData = [
+    { day: 1, value: 8 },
+    { day: 2, value: 8 },
+    { day: 3, value: 9 },
+    { day: 4, value: 10 },
+  ];
+
+  // KPI data - only 3 for mobile left column
+  const getKPIData = () => {
+    if (loading || !stats) {
+      return [
+        { title: "Total Team Members", value: "...", icon: Users, iconColorVar: "--module-blue", chartData: teamChartData, chartColor: "var(--module-blue)" },
+        { title: "New Hires", value: "...", icon: UserPlus, iconColorVar: "--module-green", chartData: hiresChartData, chartColor: "var(--module-green)" },
+        { title: "Departments", value: "...", icon: Building2, iconColorVar: "--module-purple", chartData: departmentsChartData, chartColor: "var(--module-purple)" },
+      ];
+    }
+
+    return [
+      { title: "Total Team Members", value: stats.totalEmployees.toString(), icon: Users, iconColorVar: "--module-blue", chartData: teamChartData, chartColor: "var(--module-blue)" },
+      { title: "New Hires", value: stats.newThisMonth.toString(), icon: UserPlus, iconColorVar: "--module-green", chartData: hiresChartData, chartColor: "var(--module-green)" },
+      { title: "Departments", value: stats.totalDepartments.toString(), icon: Building2, iconColorVar: "--module-purple", chartData: departmentsChartData, chartColor: "var(--module-purple)" },
+    ];
   };
 
-  // Filter configuration for activities
-  const activitiesFilterConfig = [
-    {
-      key: 'type',
-      label: 'Activity Type',
-      options: [
-        { value: 'all', label: 'All Activities' },
-        { value: 'hire', label: 'New Hires' },
-        { value: 'update', label: 'Profile Updates' },
-        { value: 'leave', label: 'Leave Requests' },
-        { value: 'department', label: 'Department Changes' },
-        { value: 'onboarding', label: 'Onboarding' },
-        { value: 'expense', label: 'Expenses' },
-        { value: 'approval', label: 'Approvals' },
-        { value: 'policy', label: 'Policy Updates' }
-      ],
-      value: activityFilter,
-      onChange: setActivityFilter
-    },
-    {
-      key: 'time',
-      label: 'Time Period',
-      options: [
-        { value: 'all', label: 'All Time' },
-        { value: 'today', label: 'Today' },
-        { value: 'week', label: 'This Week' },
-        { value: 'month', label: 'This Month' }
-      ],
-      value: timeFilter,
-      onChange: setTimeFilter
-    }
+  // Color mapping from CSS variables
+  const getColorStyle = (colorVar: string) => ({
+    backgroundColor: `var(${colorVar})`
+  });
+
+  // All quick actions
+  const allQuickActions = [
+    { name: 'Add Team Member', icon: UserPlus, path: '/hrm/employees/add', colorVar: '--module-blue' },
+    { name: 'View Team', icon: Users, path: '/hrm/employees', colorVar: '--module-green' },
+    { name: 'Leave', icon: CalendarCheck, path: '/hrm/leave-attendance', colorVar: '--module-indigo' },
+    { name: 'Departments', icon: Building2, path: '/hrm/departments', colorVar: '--module-purple' },
+    { name: 'Designations', icon: Award, path: '/hrm/designations', colorVar: '--module-teal' },
+    { name: 'Payroll', icon: DollarSign, path: '/hrm/payroll', colorVar: '--module-red' },
   ];
 
+  // Show first 3 actions in 2x2 grid (4th slot is More button)
+  const displayedActions = allQuickActions.slice(0, 3);
+
+  // Mock data for Recent Activity
+  const recentActivities = [
+    { description: "John Smith joined as Software Engineer", time: "2h ago" },
+    { description: "Sarah Wilson applied for leave", time: "4h ago" },
+    { description: "New department 'Data Science' created", time: "1d ago" },
+  ];
+
+  // --- RENDER ---
   return (
     <DashboardLayout>
-      <div className="pt-16 pb-20 lg:pb-4 px-3 sm:px-4 space-y-4 sm:space-y-6">
-        {/* Header - Mobile Optimized */}
-        <div className="pt-2 sm:pt-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Human Resource Management</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">Manage team members, departments, and HR operations</p>
-        </div>
+      {/* Main Content - Fully Responsive */}
+      <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
 
-        {/* Stats Cards - Mobile First */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {loading ? (
-            // Loading skeleton
-            Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm border border-gray-200 animate-pulse">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                  <div className="mb-2 sm:mb-0">
-                    <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-                    <div className="h-2 bg-gray-200 rounded w-2/3 mt-1 hidden sm:block"></div>
-                  </div>
-                  <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg bg-gray-200 self-end sm:self-auto"></div>
-                </div>
-                <div className="h-2 bg-gray-200 rounded w-2/3 mt-2 sm:hidden"></div>
-              </div>
-            ))
-          ) : (
-            hrmStats.map((stat, index) => {
-              const IconComponent = stat.icon;
-              return (
-                <div key={index} className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm border border-gray-200">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                    <div className="mb-2 sm:mb-0">
-                      <p className="text-xs sm:text-sm text-gray-600 truncate">{stat.title}</p>
-                      <p className="text-lg sm:text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
-                      <p className="text-xs text-gray-500 mt-1 hidden sm:block">{stat.change}</p>
-                    </div>
-                    <div className={`w-8 h-8 sm:w-12 sm:h-12 rounded-lg ${stat.color} flex items-center justify-center self-end sm:self-auto`}>
-                      <IconComponent className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                  </div>
-                  {/* Show change on mobile below stats */}
-                  <p className="text-xs text-gray-500 mt-2 sm:hidden">{stat.change}</p>
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
-          {/* Quick Actions - Mobile Optimized */}
-          <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Quick Actions</h2>
-            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-              {quickActions.map((action, index) => {
-                const IconComponent = action.icon;
-                return (
-                  <Link
-                    key={index}
-                    href={action.href}
-                    className="flex flex-col items-center space-y-2 sm:space-y-3 p-3 sm:p-4 rounded-lg hover:bg-gray-50 transition-colors border border-gray-100"
-                  >
-                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${action.color} flex items-center justify-center`}>
-                      <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <span className="text-xs sm:text-sm font-medium text-gray-900 text-center leading-tight">{action.name}</span>
-                  </Link>
-                );
-              })}
-            </div>
+        {/* Mobile: Left/Right Split | Desktop: Horizontal KPIs */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
+          {/* Left Column - KPIs Vertical (Mobile) | Horizontal (Desktop) */}
+          <div className="col-span-1 lg:col-span-3 flex flex-col lg:grid lg:grid-cols-3 gap-2 lg:gap-4">
+            {getKPIData().map((kpi, index) => (
+              <KPICard key={index} {...kpi} variant="minimal" />
+            ))}
           </div>
 
-          {/* Recent Activities - Mobile Optimized */}
-          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200">
-            <div className="p-4 sm:p-6 border-b border-gray-200">
-              <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Recent Activities ({filteredActivities.length})</h2>
-
-              {/* Filter and Export for Activities */}
-              <FilterExportBar
-                filters={activitiesFilterConfig}
-                onExport={handleActivitiesExport}
-                className="border-0 p-0 bg-transparent"
-              />
-            </div>
-
-            <div className="p-4 sm:p-6 max-h-96 overflow-y-auto">
-              <div className="space-y-3 sm:space-y-4">
-                {filteredActivities.map((activity, index) => (
-                  <div key={index} className="flex items-start space-x-2 sm:space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                    <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                      activity.type === 'hire' ? 'bg-green-500' :
-                      activity.type === 'update' ? 'bg-blue-500' :
-                      activity.type === 'leave' ? 'bg-orange-500' :
-                      activity.type === 'department' ? 'bg-purple-500' :
-                      activity.type === 'onboarding' ? 'bg-indigo-500' :
-                      activity.type === 'expense' ? 'bg-yellow-500' :
-                      activity.type === 'approval' ? 'bg-emerald-500' : 'bg-gray-500'
-                    }`}></div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs sm:text-sm text-gray-900 leading-snug">{activity.activity}</p>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          activity.type === 'hire' ? 'bg-green-100 text-green-800' :
-                          activity.type === 'update' ? 'bg-blue-100 text-blue-800' :
-                          activity.type === 'leave' ? 'bg-orange-100 text-orange-800' :
-                          activity.type === 'department' ? 'bg-purple-100 text-purple-800' :
-                          activity.type === 'onboarding' ? 'bg-indigo-100 text-indigo-800' :
-                          activity.type === 'expense' ? 'bg-yellow-100 text-yellow-800' :
-                          activity.type === 'approval' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {activity.type}
-                        </span>
-                        <span className="text-xs text-gray-500">{activity.time}</span>
+          {/* Right Column - Quick Actions (Mobile Only) */}
+          <div className="lg:hidden col-span-1">
+            <div className="bg-card rounded-xl p-3 shadow-sm border border-border">
+              <div className="grid grid-cols-2 gap-2">
+                {displayedActions.map((action, index) => {
+                  const IconComponent = action.icon;
+                  return (
+                    <Link key={index} href={action.path} className="flex flex-col items-center justify-center space-y-1.5 p-2 rounded-lg border border-border hover:bg-accent transition-colors">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={getColorStyle(action.colorVar)}>
+                        <IconComponent className="w-5 h-5 text-white" />
                       </div>
-                    </div>
+                      <span className="text-[9px] font-medium text-center text-foreground leading-tight">{action.name}</span>
+                    </Link>
+                  );
+                })}
+                {/* More Button */}
+                <button
+                  onClick={() => setShowActionsModal(true)}
+                  className="flex flex-col items-center justify-center space-y-1.5 p-2 rounded-lg border border-border hover:bg-accent transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                    <MoreHorizontal className="w-5 h-5 text-foreground" />
                   </div>
-                ))}
-
-                {filteredActivities.length === 0 && (
-                  <div className="text-center py-8">
-                    <Clock className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No activities found</h3>
-                    <p className="mt-1 text-sm text-gray-500">Try adjusting your filter criteria.</p>
-                  </div>
-                )}
+                  <span className="text-[9px] font-medium text-foreground">More</span>
+                </button>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Desktop: 2-Column Grid Layout like Dashboard */}
+        <div className="hidden lg:grid lg:grid-cols-2 gap-6">
+          {/* Quick Actions Section */}
+          <Card className="bg-card rounded-xl p-0 shadow-sm border border-border">
+            <CardHeader className="p-6 pb-4">
+              <CardTitle className="text-lg font-semibold text-foreground">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="grid grid-cols-3 gap-3">
+                {allQuickActions.map((action, index) => {
+                  const IconComponent = action.icon;
+                  return (
+                    <Link key={index} href={action.path} className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg border border-border hover:bg-accent transition-colors group">
+                      <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={getColorStyle(action.colorVar)}>
+                        <IconComponent className="w-6 h-6 text-white" />
+                      </div>
+                      <span className="text-xs font-medium text-center text-foreground leading-tight">{action.name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Performance Chart */}
+          <Card className="bg-card rounded-xl p-0 shadow-sm border border-border">
+            <CardHeader className="p-6 pb-4">
+              <CardTitle className="text-lg font-semibold text-foreground">Team Performance</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={performanceData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border" />
+                    <XAxis
+                      dataKey="month"
+                      tick={{ fill: 'currentColor', fontSize: 11 }}
+                      className="text-muted-foreground"
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fill: 'currentColor', fontSize: 11 }}
+                      className="text-muted-foreground"
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        color: 'hsl(var(--foreground))',
+                        borderRadius: '8px',
+                        fontSize: '12px'
+                      }}
+                    />
+                    <Bar dataKey="hires" fill="var(--chart-hires)" radius={[4, 4, 0, 0]} name="New Hires" />
+                    <Bar dataKey="leaves" fill="var(--chart-leaves)" radius={[4, 4, 0, 0]} name="Exits" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Mobile: Performance Chart */}
+        <Card className="lg:hidden bg-card rounded-xl p-0 shadow-sm border border-border">
+          <CardHeader className="p-3 sm:p-4 pb-0">
+            <CardTitle className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Team Performance</CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="h-40 sm:h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={performanceData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border" />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fill: 'currentColor', fontSize: 11 }}
+                    className="text-muted-foreground"
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fill: 'currentColor', fontSize: 11 }}
+                    className="text-muted-foreground"
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      color: 'hsl(var(--foreground))',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                  />
+                  <Bar dataKey="hires" fill="var(--chart-hires)" radius={[4, 4, 0, 0]} name="New Hires" />
+                  <Bar dataKey="leaves" fill="var(--chart-leaves)" radius={[4, 4, 0, 0]} name="Exits" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity - Responsive */}
+        <Card className="bg-card rounded-xl p-0 shadow-sm border border-border">
+          <CardHeader className="p-3 sm:p-4 lg:p-6 pb-0">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <CardTitle className="text-base sm:text-lg font-semibold text-foreground">Recent Activity</CardTitle>
+              <Link href="#" className="text-xs sm:text-sm font-medium text-primary hover:underline">View All</Link>
+            </div>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-4 lg:p-6 pt-0">
+            <div className="space-y-2 sm:space-y-3">
+              {recentActivities.map((activity, index) => (
+                <div key={index} className="flex items-start space-x-2 sm:space-x-3 p-2 sm:p-2.5 rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="w-2 h-2 bg-primary rounded-full mt-1.5 sm:mt-2 flex-shrink-0"></div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm text-foreground line-clamp-2">{activity.description}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{activity.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
       </div>
+
+      {/* Quick Actions Modal */}
+      <Modal
+        isOpen={showActionsModal}
+        onClose={() => setShowActionsModal(false)}
+        title="All Quick Actions"
+        className="max-w-2xl"
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+          {allQuickActions.map((action, index) => {
+            const IconComponent = action.icon;
+            return (
+              <Link
+                key={index}
+                href={action.path}
+                onClick={() => setShowActionsModal(false)}
+                className="flex flex-col items-center justify-center space-y-3 p-4 sm:p-5 rounded-lg border border-border hover:bg-accent transition-colors group"
+              >
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg flex items-center justify-center" style={getColorStyle(action.colorVar)}>
+                  <IconComponent className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                </div>
+                <span className="text-sm sm:text-base font-medium text-center text-foreground">{action.name}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </Modal>
     </DashboardLayout>
   );
-}
+};
+
+export default HRMPage;
