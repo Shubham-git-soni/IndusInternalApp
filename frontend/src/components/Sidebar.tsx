@@ -152,7 +152,7 @@ const Sidebar = ({ isCollapsed, onToggle }: SidebarProps) => {
   const navItems = getNavigationItems();
 
   return (
-    <div className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-card border-r border-border transition-all duration-300 ${
+    <div className={`fixed left-0 top-14 h-[calc(100vh-3.5rem)] bg-card border-r border-border transition-all duration-300 ${
       isCollapsed ? 'w-16' : 'w-64'
     } hidden lg:block z-40`}>
       <div className="flex flex-col h-full">

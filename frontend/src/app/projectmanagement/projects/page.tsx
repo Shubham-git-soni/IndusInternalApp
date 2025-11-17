@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, Edit, Plus, Trash2, MoreVertical } from 'lucide-react';
 
-import DashboardLayout from '@/components/DashboardLayout';
+// DashboardLayout is already applied in projectmanagement/layout.tsx
 import PageHeader from '@/components/PageHeader';
 import SearchBar from '@/components/SearchBar';
 import FilterExportBar from '@/components/FilterExportBar';
@@ -228,8 +228,7 @@ export default function ProjectsListPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
+      <div className="py-3 lg:py-4 space-y-2">
         <PageHeader
           title="Projects"
           description="Manage and track all company projects"
@@ -596,6 +595,5 @@ export default function ProjectsListPage() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   );
 }

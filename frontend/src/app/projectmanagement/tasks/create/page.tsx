@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Paperclip } from 'lucide-react';
-import DashboardLayout from '@/components/DashboardLayout';
+// DashboardLayout is already applied in projectmanagement/layout.tsx
 import PageHeader from '@/components/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -35,7 +35,7 @@ export default function CreateTaskPage() {
   };
 
   return (
-    <DashboardLayout>
+    
       <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
         <PageHeader
           title="Create New Issue"
@@ -164,6 +164,6 @@ export default function CreateTaskPage() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    
   );
 }

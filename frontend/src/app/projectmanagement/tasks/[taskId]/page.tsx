@@ -4,7 +4,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Edit, Trash2, User, Flag, Calendar, Tag, MessageSquare, Paperclip, Send } from 'lucide-react';
 import { useState } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
+// DashboardLayout is already applied in projectmanagement/layout.tsx
 
 const tasks = [
   {
@@ -54,11 +54,11 @@ export default function TaskDetailsPage() {
 
   if (!task) {
     return (
-      <DashboardLayout>
+      
         <div className="py-3 lg:py-4 flex items-center justify-center">
           <p className="text-muted-foreground">Task not found</p>
         </div>
-      </DashboardLayout>
+      
     );
   }
 
@@ -70,7 +70,7 @@ export default function TaskDetailsPage() {
   };
 
   return (
-    <DashboardLayout>
+    
       <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
         <div className="flex justify-between items-center mb-6">
             <div className="flex items-center">
@@ -197,6 +197,6 @@ export default function TaskDetailsPage() {
         </div>
       </div>
       </div>
-    </DashboardLayout>
+    
   );
 }

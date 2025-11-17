@@ -64,10 +64,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
       {/* Main Content - Scrollable */}
-      <div className={`flex-1 overflow-y-auto pt-14 pb-16 lg:pb-6 transition-all duration-300 ${
+      <div className={`flex-1 overflow-y-auto overflow-x-hidden pt-14 pb-16 lg:pb-6 transition-all duration-300 ml-0 ${
         sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'
       }`}>
-        <div className="px-3 sm:px-4 lg:px-6">
+        <div className="px-3 lg:px-4">
           {children}
         </div>
       </div>

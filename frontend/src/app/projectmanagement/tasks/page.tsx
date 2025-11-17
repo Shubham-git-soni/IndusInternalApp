@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Eye, Edit, Trash2, MoreVertical } from 'lucide-react';
 
-import DashboardLayout from '@/components/DashboardLayout';
+// DashboardLayout is already applied in projectmanagement/layout.tsx
 import PageHeader from '@/components/PageHeader';
 import SearchBar from '@/components/SearchBar';
 import FilterExportBar from '@/components/FilterExportBar';
@@ -266,7 +266,6 @@ export default function TasksPage() {
   };
 
   return (
-    <DashboardLayout>
       <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
         <PageHeader
           title="Tasks"
@@ -636,6 +635,5 @@ export default function TasksPage() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   );
 }
