@@ -296,9 +296,9 @@ export default function SchedulePage() {
   }
 
   return (
-    <div className="space-y-3 sm:space-y-6">
-          <div className="px-1">
-            <h1 className="text-xl sm:text-3xl font-bold tracking-tight">Schedule Meeting/Demo</h1>
+    <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Schedule Meeting/Demo</h1>
             <p className="text-sm sm:text-base text-muted-foreground">Schedule a meeting or demo with a lead</p>
           </div>
     

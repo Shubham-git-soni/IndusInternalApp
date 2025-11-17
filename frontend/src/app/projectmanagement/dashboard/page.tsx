@@ -14,7 +14,6 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import DashboardLayout from '@/components/DashboardLayout';
 import KPICard from '@/components/KPICard';
 import Modal from '@/components/Modal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -86,14 +85,17 @@ export default function PMSDashboardPage() {
     backgroundColor: `var(${colorVar})`
   });
 
-  // Quick actions for PM
-  const quickActions = [
+  // All quick actions
+  const allQuickActions = [
     { name: 'All Projects', icon: FolderKanban, path: '/projectmanagement/projects', colorVar: '--module-blue' },
     { name: 'My Tasks', icon: ListTodo, path: '/projectmanagement/tasks', colorVar: '--module-green' },
     { name: 'Team', icon: Users, path: '/projectmanagement/team', colorVar: '--module-purple' },
     { name: 'Calendar', icon: Calendar, path: '/projectmanagement/calendar', colorVar: '--module-indigo' },
     { name: 'Reports', icon: Zap, path: '/projectmanagement/reports', colorVar: '--module-teal' },
   ];
+
+  // Show first 3 actions in 2x2 grid (4th slot is More button)
+  const displayedActions = allQuickActions.slice(0, 3);
 
   // Active Projects data for bar chart
   const activeProjectsData = [
@@ -113,14 +115,17 @@ export default function PMSDashboardPage() {
   ];
 
   return (
-    <DashboardLayout>
-      {/* Main Content - Fully Responsive */}
+    <>
       <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
 
-        {/* Header - Hidden on Mobile, Visible on Desktop */}
-        <div className="hidden lg:block">
-          <h1 className="text-2xl font-bold text-foreground">Project Management Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Overview of all project activities and metrics</p>
+        {/* Header - Mobile Optimized */}
+        <div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Project Management Dashboard</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">Overview of all project activities and metrics</p>
+            </div>
+          </div>
         </div>
 
         {/* Mobile: Left/Right Split | Desktop: Horizontal KPIs */}
@@ -136,7 +141,7 @@ export default function PMSDashboardPage() {
           <div className="lg:hidden col-span-1">
             <div className="bg-card rounded-xl p-3 shadow-sm border border-border">
               <div className="grid grid-cols-2 gap-2">
-                {quickActions.slice(0, 3).map((action, index) => {
+                {displayedActions.map((action, index) => {
                   const IconComponent = action.icon;
                   return (
                     <Link key={index} href={action.path} className="flex flex-col items-center justify-center space-y-1.5 p-2 rounded-lg border border-border hover:bg-accent transition-colors">
@@ -162,7 +167,7 @@ export default function PMSDashboardPage() {
           </div>
         </div>
 
-        {/* Desktop: 2-Column Grid Layout like HRM */}
+        {/* Desktop: 2-Column Grid Layout */}
         <div className="hidden lg:grid lg:grid-cols-2 gap-6">
           {/* Quick Actions Section */}
           <Card className="bg-card rounded-xl p-0 shadow-sm border border-border">
@@ -171,7 +176,7 @@ export default function PMSDashboardPage() {
             </CardHeader>
             <CardContent className="p-6 pt-0">
               <div className="grid grid-cols-3 gap-3">
-                {quickActions.map((action, index) => {
+                {allQuickActions.map((action, index) => {
                   const IconComponent = action.icon;
                   return (
                     <Link key={index} href={action.path} className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg border border-border hover:bg-accent transition-colors group">
@@ -188,46 +193,44 @@ export default function PMSDashboardPage() {
 
           {/* Active Projects Bar Chart */}
           <Card className="bg-card rounded-xl p-0 shadow-sm border border-border">
-            <CardHeader className="p-6 pb-4">
-              <CardTitle className="text-lg font-semibold text-foreground">Active Projects Progress</CardTitle>
+            <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b border-border">
+              <CardTitle className="text-base sm:text-lg font-semibold text-foreground">Active Projects Progress</CardTitle>
             </CardHeader>
-            <CardContent className="p-6 pt-0">
-              <div className="h-64 overflow-x-auto">
-                <div className="min-w-[400px]">
-                  <ResponsiveContainer width="100%" height={256}>
-                    <BarChart data={activeProjectsData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} className="stroke-border" />
-                      <XAxis
-                        type="number"
-                        domain={[0, 100]}
-                        tick={{ fill: 'currentColor', fontSize: 11 }}
-                        className="text-muted-foreground"
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <YAxis
-                        type="category"
-                        dataKey="name"
-                        tick={{ fill: 'currentColor', fontSize: 11 }}
-                        className="text-muted-foreground"
-                        axisLine={false}
-                        tickLine={false}
-                        width={120}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          color: 'hsl(var(--foreground))',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                        formatter={(value) => [`${value}%`, 'Progress']}
-                      />
-                      <Bar dataKey="progress" fill="var(--chart-projects)" radius={[0, 4, 4, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+            <CardContent className="p-4 sm:p-6">
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height={256}>
+                  <BarChart data={activeProjectsData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} className="stroke-border" />
+                    <XAxis
+                      type="number"
+                      domain={[0, 100]}
+                      tick={{ fill: 'currentColor', fontSize: 11 }}
+                      className="text-muted-foreground"
+                      axisLine={false}
+                      tickLine={false} 
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      tick={{ fill: 'currentColor', fontSize: 11 }}
+                      className="text-muted-foreground"
+                      axisLine={false}
+                      tickLine={false}
+                      width={120}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        color: 'hsl(var(--foreground))',
+                        borderRadius: '8px',
+                        fontSize: '12px'
+                      }}
+                      formatter={(value) => [`${value}%`, 'Progress']}
+                    />
+                    <Bar dataKey="progress" fill="var(--chart-projects)" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
@@ -239,42 +242,40 @@ export default function PMSDashboardPage() {
             <CardTitle className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Active Projects Progress</CardTitle>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
-            <div className="h-48 overflow-x-auto">
-              <div className="min-w-[350px]">
-                <ResponsiveContainer width="100%" height={192}>
-                  <BarChart data={activeProjectsData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} className="stroke-border" />
-                    <XAxis
-                      type="number"
-                      domain={[0, 100]}
-                      tick={{ fill: 'currentColor', fontSize: 10 }}
-                      className="text-muted-foreground"
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      type="category"
-                      dataKey="name"
-                      tick={{ fill: 'currentColor', fontSize: 10 }}
-                      className="text-muted-foreground"
-                      axisLine={false}
-                      tickLine={false}
-                      width={100}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        color: 'hsl(var(--foreground))',
-                        borderRadius: '8px',
-                        fontSize: '11px'
-                      }}
-                      formatter={(value) => [`${value}%`, 'Progress']}
-                    />
-                    <Bar dataKey="progress" fill="var(--chart-projects)" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+            <div className="h-40 sm:h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={activeProjectsData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} className="stroke-border" />
+                  <XAxis
+                    type="number"
+                    domain={[0, 100]}
+                    tick={{ fill: 'currentColor', fontSize: 11 }}
+                    className="text-muted-foreground"
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    tick={{ fill: 'currentColor', fontSize: 11 }}
+                    className="text-muted-foreground"
+                    axisLine={false}
+                    tickLine={false}
+                    width={100}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      color: 'hsl(var(--foreground))',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                    formatter={(value) => [`${value}%`, 'Progress']}
+                  />
+                  <Bar dataKey="progress" fill="var(--chart-projects)" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
@@ -312,7 +313,7 @@ export default function PMSDashboardPage() {
         className="max-w-2xl"
       >
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-          {quickActions.map((action, index) => {
+          {allQuickActions.map((action, index) => {
             const IconComponent = action.icon;
             return (
               <Link
@@ -330,6 +331,6 @@ export default function PMSDashboardPage() {
           })}
         </div>
       </Modal>
-    </DashboardLayout>
+    </>
   );
 }

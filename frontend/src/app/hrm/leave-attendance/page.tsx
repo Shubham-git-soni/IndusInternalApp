@@ -225,7 +225,7 @@ export default function LeaveAttendancePage() {
 
   return (
     <DashboardLayout>
-      <div className="pt-16 pb-20 lg:pb-4 px-3 sm:px-4 space-y-4 sm:space-y-6">
+      <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
         {/* Header */}
         <PageHeader
           title="Leave & Attendance"

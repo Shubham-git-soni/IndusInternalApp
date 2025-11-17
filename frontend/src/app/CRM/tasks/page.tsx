@@ -188,13 +188,13 @@ export default function TasksPage() {
     }
 
     return (
-        <div className="container mx-auto py-6">
+        <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
             <Card>
                 <CardHeader>
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                         <div>
-                            <CardTitle>Task Management</CardTitle>
-                            <CardDescription>
+                            <CardTitle className="text-lg sm:text-xl">Task Management</CardTitle>
+                            <CardDescription className="text-sm">
                                 Here are the tasks assigned to you. Manage your workflow to stay productive.
                             </CardDescription>
                         </div>

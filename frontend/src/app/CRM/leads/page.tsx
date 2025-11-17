@@ -53,6 +53,13 @@ import {
   Handshake,
   FileText,
   Trash2,
+  Grid3x3,
+  Table2,
+  Phone,
+  Mail,
+  MapPin,
+  Building,
+  Calendar,
 } from "lucide-react"
 import Link from "next/link"
 import { ReassignLeadModal } from "@/components/leads/reassign-lead-modal"
@@ -88,13 +95,15 @@ import { formatDateTime } from "@/lib/date-format";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 
-interface Contact { id: number; lead_id: number; contact_name: string; phone: string; email: string | null; designation: string | null; linkedIn?: string | null; pan?: string | null; }
-interface Lead extends ApiLead { id: string; last_activity?: ApiActivity | null }
+// Using ApiLead directly - no custom Lead interface needed
+type Lead = ApiLead & {
+  last_activity?: ApiActivity | null;
+}
 
 interface LoggedInUser { id: string; username: string; email: string; role: string; }
 interface CompanyUser { id: string; name: string; email: string; role: string; }
 
-const statusColors = { new: "default", qualified: "secondary", unqualified: "destructive", not_our_segment: "destructive", "Meeting Done": "outline", "Demo Done": "outline", "Proposal Sent": "outline", "Won/Deal Done": "success", Lost: "destructive" } as const;
+const statusColors = { new: "default", qualified: "secondary", unqualified: "destructive", not_our_segment: "destructive", "Meeting Done": "outline", "Demo Done": "outline", "Proposal Sent": "outline", "Won/Deal Done": "outline", Lost: "destructive" } as const;
 const leadTypes = ["Hot Lead", "Cold Lead","Warm Lead"];
 interface ColumnConfig { id: string; label: string; key: keyof Lead | "actions" | "contact_name" | "phone" | "last_activity" | "designation" | "contact_email" | "contact_linkedin" | "contact_pan"; render?: (lead: Lead) => React.ReactNode; }
 const capitalize = (s: string) => {
@@ -597,6 +606,7 @@ export default function LeadsPage() {
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(30);
+  const [viewType, setViewType] = useState<'card' | 'table'>('card');
 
   const [showExportOptionsModal, setShowExportOptionsModal] = useState(false);
 
@@ -611,16 +621,24 @@ export default function LeadsPage() {
       }
       const parsedUser = JSON.parse(userData)
       setUser(parsedUser)
-      const [usersData, allLeadsData, dripsData] = await Promise.all([
-        userApi.getUsers(),
-        api.getAllLeads(),
-        api.getDripSequences()
-      ]);
+
+      // DUMMY DATA - Replace with actual API calls when backend is ready
+      const usersData: ApiUser[] = [
+        { id: 1, username: parsedUser.username, email: parsedUser.email, role: parsedUser.role || "user", company_name: "My Company", usernumber: "USR001" },
+        { id: 2, username: "John Doe", email: "john@company.com", role: "user", company_name: "My Company", usernumber: "USR002" },
+      ];
+
+      const allLeadsData: ApiLead[] = [
+        { id: 1, company_name: "Tech Corp", email: "contact@techcorp.com", assigned_to: parsedUser.username, created_by: parsedUser.username, status: "New", lead_type: "Hot Lead", source: "Website", contacts: [{ id: 1, lead_id: 1, contact_name: "John Smith", phone: "+1234567890", email: "john@techcorp.com", designation: "CTO", linkedIn: null, pan: null }], created_at: new Date().toISOString(), address: "123 Tech Street", city: "San Francisco", state: "CA", country: "USA" },
+        { id: 2, company_name: "Digital Solutions", email: "info@digital.com", assigned_to: parsedUser.username, created_by: parsedUser.username, status: "Meeting Scheduled", lead_type: "Warm Lead", source: "Referral", contacts: [{ id: 2, lead_id: 2, contact_name: "Jane Doe", phone: "+9876543210", email: "jane@digital.com", designation: "CEO", linkedIn: null, pan: null }], created_at: new Date().toISOString(), address: "456 Digital Ave", city: "New York", state: "NY", country: "USA" },
+        { id: 3, company_name: "Startup Inc", email: "hello@startup.com", assigned_to: "John Doe", created_by: parsedUser.username, status: "Demo Done", lead_type: "Cold Lead", source: "Cold Call", contacts: [], created_at: new Date().toISOString(), address: "789 Startup Blvd", city: "Austin", state: "TX", country: "USA" },
+      ] as ApiLead[];
+
+      const dripsData: any[] = [];
+
       const transformedLeads: Lead[] = allLeadsData.map((lead: ApiLead & { last_activity?: ApiActivity | null }) => ({
-        id: lead.id.toString(), company_name: lead.company_name, contacts: lead.contacts || [], phone_2: lead.phone_2, email: lead.email || "", website: lead.website, linkedIn: lead.linkedIn, address: lead.address, address_2: lead.address_2, city: lead.city, state: lead.state, country: lead.country, pincode: lead.pincode, team_size: lead.team_size, turnover: lead.turnover, source: lead.source, segment: lead.segment, verticles: lead.verticles, remark: lead.remark, machine_specification: lead.machine_specification, challenges: lead.challenges, assigned_to: lead.assigned_to, created_by: lead.created_by, current_system: lead.current_system, lead_type: lead.lead_type, status: lead.status, created_at: lead.created_at, updated_at: lead.updated_at || lead.created_at,
+        ...lead,
         last_activity: lead.last_activity || null,
-        opportunity_business: lead.opportunity_business,
-        target_closing_date: lead.target_closing_date,
       }));
       const transformedUsers: CompanyUser[] = usersData.map((user: ApiUser) => ({
         id: user.id.toString(), name: user.username, email: user.email || `${user.username}@company.com`, role: user.role || "user",
@@ -737,7 +755,8 @@ export default function LeadsPage() {
       return filteredLeads.slice(startIndex, endIndex);
   }, [filteredLeads, currentPage, rowsPerPage]);
 
-  const getUserName = (userId: string) => {
+  const getUserName = (userId: string | null) => {
+    if (!userId) return 'Unassigned';
     const foundUser = companyUsers.find((u) => u.name === userId || u.id === userId)
     return foundUser ? foundUser.name : userId
   }
@@ -1026,43 +1045,74 @@ export default function LeadsPage() {
 
    return (
     <>
-      <div className="flex h-full flex-col space-y-4">
+      <div className="flex h-full flex-col py-3 lg:py-4 space-y-3 lg:space-y-4">
         <div className="flex-shrink-0">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Lead Details</h1>
-              <p className="text-muted-foreground">{viewMode === "all" ? "Manage and track all leads" : "Manage and track your assigned leads"}</p>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Lead Details</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">{viewMode === "all" ? "Manage and track all leads" : "Manage and track your assigned leads"}</p>
             </div>
-            <div className="flex items-center space-x-2">
-              <Button onClick={handleOpenExportModal} variant="outline" disabled={isExporting}>
+            <div className="flex items-center gap-2">
+              {/* View Toggle - Desktop */}
+              <div className="hidden lg:flex items-center gap-1 border border-border rounded-lg p-1">
+                <Button
+                  variant={viewType === 'card' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewType('card')}
+                  className="h-8"
+                >
+                  <Grid3x3 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewType === 'table' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewType('table')}
+                  className="h-8"
+                >
+                  <Table2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <Button onClick={handleOpenExportModal} variant="outline" size="sm" disabled={isExporting} className="hidden sm:flex">
                 {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ExportIcon className="mr-2 h-4 w-4" />}
-                Export to Excel
+                <span className="hidden sm:inline">Export</span>
               </Button>
-              <Link href="/dashboard/create-lead"><Button><Plus className="mr-2 h-4 w-4" />Create Lead</Button></Link>
+              <Link href="/dashboard/create-lead">
+                <Button size="sm">
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Create Lead</span>
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
 
         <Card className="flex flex-1 flex-col overflow-hidden">
           <CardHeader className="flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <CardTitle>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <CardTitle className="text-base sm:text-lg">
                 {viewMode === "all" ? "All Leads" : "My Assigned Leads"}
-                <span className="ml-2 text-sm font-normal text-muted-foreground">({filteredLeads.length} leads)</span>
+                <span className="ml-2 text-sm font-normal text-muted-foreground">({filteredLeads.length})</span>
               </CardTitle>
-              <div className="flex items-center space-x-2">
-                <Button variant={viewMode === "my" ? "default" : "outline"} size="sm" onClick={() => setViewMode("my")} className="flex items-center space-x-2"><User className="h-4 w-4" /><span>My Leads</span></Button>
-                <Button variant={viewMode === "all" ? "default" : "outline"} size="sm" onClick={() => setViewMode("all")} className="flex items-center space-x-2"><Users className="h-4 w-4" /><span>All Leads</span></Button>
+              <div className="flex items-center gap-2">
+                <Button variant={viewMode === "my" ? "default" : "outline"} size="sm" onClick={() => setViewMode("my")} className="flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm">My Leads</span>
+                </Button>
+                <Button variant={viewMode === "all" ? "default" : "outline"} size="sm" onClick={() => setViewMode("all")} className="flex items-center gap-1.5">
+                  <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm">All Leads</span>
+                </Button>
               </div>
             </div>
-            <div className="flex items-center space-x-2 pt-4">
-              <div className="relative flex-grow">
-                <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search all columns..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-8 w-full"/>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Search leads..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-8 w-full h-9"/>
               </div>
-              <DropdownMenu>
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                      <Button variant="outline"><Columns className="mr-2 h-4 w-4" />Columns</Button>
+                      <Button variant="outline" size="sm" className="hidden lg:flex"><Columns className="mr-2 h-4 w-4" />Columns</Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
@@ -1079,14 +1129,14 @@ export default function LeadsPage() {
                       ))}
                   </DropdownMenuContent>
               </DropdownMenu>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="relative">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Filters
-                    {activeFilterCount > 0 && (<Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 justify-center p-0">{activeFilterCount}</Badge>)}
-                  </Button>
-                </PopoverTrigger>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="relative">
+                      <Filter className="mr-2 h-4 w-4" />
+                      <span className="hidden sm:inline">Filters</span>
+                      {activeFilterCount > 0 && (<Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 justify-center p-0 text-xs">{activeFilterCount}</Badge>)}
+                    </Button>
+                  </PopoverTrigger>
                 <PopoverContent className="w-80" align="end">
                   <div className="space-y-4">
                     <h4 className="font-medium leading-none">Apply Filters</h4>
@@ -1117,7 +1167,8 @@ export default function LeadsPage() {
                     <Button onClick={clearFilters} variant="ghost" className="w-full">Clear All Filters</Button>
                   </div>
                 </PopoverContent>
-              </Popover>
+                </Popover>
+              </div>
             </div>
             {activeFilterCount > 0 && (
               <div className="flex items-center gap-2 pt-4 flex-wrap">
@@ -1128,9 +1179,131 @@ export default function LeadsPage() {
           </CardHeader>
 
           <CardContent className="flex flex-1 flex-col min-h-0">
-            <div className="relative flex-1 overflow-auto rounded-md border">
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <Table>
+            {/* Card View - Mobile First */}
+            {viewType === 'card' && (
+              <div className="flex-1 overflow-auto">
+                {filteredLeads.length === 0 ? (
+                  <div className="flex items-center justify-center h-64">
+                    <p className="text-muted-foreground">
+                      {viewMode === "all" ? "No leads found matching your search criteria." : "No leads assigned to you yet."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                    {paginatedLeads.map((lead) => (
+                      <div key={lead.id} className="bg-card border border-border rounded-lg p-4 hover:shadow-md hover:border-primary/20 transition-all duration-200">
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base font-semibold text-foreground mb-1 truncate">
+                              {lead.company_name}
+                            </h3>
+                            <Badge variant={statusColors[lead.status as keyof typeof statusColors] || "default"} className="text-xs">
+                              {lead.status}
+                            </Badge>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleViewDetails(lead)}>
+                                <Eye className="mr-2 h-4 w-4" />View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleViewActivities(lead)}>
+                                <Activity className="mr-2 h-4 w-4" />Activities
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEditLead(lead)}>
+                                <Edit className="mr-2 h-4 w-4" />Edit
+                              </DropdownMenuItem>
+                              {canManageAllLeads(user) && (
+                                <DropdownMenuItem onClick={() => handleReassignLead(lead)}>
+                                  <UserCheck className="mr-2 h-4 w-4" />Reassign
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleConvertToProposalSent(lead)}>
+                                <FileText className="mr-2 h-4 w-4" />Convert to Proposal
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleConvertLeadToClient(lead)}>
+                                <Handshake className="mr-2 h-4 w-4" />Convert to Client
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleDownloadPdf(lead)} className="text-primary">
+                                <FileDown className="mr-2 h-4 w-4" />Download PDF
+                              </DropdownMenuItem>
+                              {canManageAllLeads(user) && (
+                                <DropdownMenuItem onClick={() => handleDeleteLead(lead)} className="text-destructive">
+                                  <Trash2 className="mr-2 h-4 w-4" />Delete
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        {/* Lead Details */}
+                        <div className="space-y-2 mb-4 text-sm">
+                          {lead.contacts && lead.contacts.length > 0 && (
+                            <>
+                              <div className="flex items-center text-muted-foreground">
+                                <User className="w-4 h-4 mr-2 flex-shrink-0" />
+                                <span className="truncate">{lead.contacts[0].contact_name}</span>
+                              </div>
+                              {lead.contacts[0].phone && (
+                                <div className="flex items-center text-muted-foreground">
+                                  <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
+                                  <span className="truncate">{lead.contacts[0].phone}</span>
+                                </div>
+                              )}
+                              {lead.contacts[0].email && (
+                                <div className="flex items-center text-muted-foreground">
+                                  <Mail className="w-4 h-4 mr-2 flex-shrink-0" />
+                                  <span className="truncate">{lead.contacts[0].email}</span>
+                                </div>
+                              )}
+                            </>
+                          )}
+                          {(lead.city || lead.state) && (
+                            <div className="flex items-center text-muted-foreground">
+                              <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+                              <span className="truncate">
+                                {[lead.city, lead.state].filter(Boolean).join(', ')}
+                              </span>
+                            </div>
+                          )}
+                          {lead.lead_type && (
+                            <div className="flex items-center text-muted-foreground">
+                              <Building className="w-4 h-4 mr-2 flex-shrink-0" />
+                              <span className="truncate">{lead.lead_type}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex items-center justify-between pt-3 border-t border-border">
+                          <div className="text-xs text-muted-foreground flex items-center">
+                            <User className="w-3 h-3 mr-1" />
+                            {getUserName(lead.assigned_to)}
+                          </div>
+                          <div className="text-xs text-muted-foreground flex items-center">
+                            <Calendar className="w-3 h-3 mr-1" />
+                            {new Date(lead.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Table View - Desktop */}
+            {viewType === 'table' && (
+              <div className="relative flex-1 overflow-auto rounded-md border">
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <Table>
                   <TableHeader className="sticky top-0 z-10 bg-background">
                     <SortableContext items={visibleColumns.map((col) => col.id)} strategy={horizontalListSortingStrategy}>
                       <TableRow>
@@ -1182,9 +1355,12 @@ export default function LeadsPage() {
                   </p>
                 </div>
               )}
-            </div>
+              </div>
+            )}
 
-            <div className="flex-shrink-0 pt-4">
+            {/* Pagination - Both Views */}
+            {filteredLeads.length > 0 && (
+              <div className="flex-shrink-0 pt-4">
               <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                       <Label htmlFor="rows-per-page" className="text-sm text-muted-foreground">Rows per page</Label>
@@ -1213,7 +1389,8 @@ export default function LeadsPage() {
                       </div>
                   </div>
               </div>
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

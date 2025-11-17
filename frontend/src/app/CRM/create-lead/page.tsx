@@ -449,7 +449,7 @@ export default function CreateLeadPage() {
   }
 
   return (
-    <div className="space-y-3 sm:space-y-6">
+    <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
       <FieldVisibilityModal
         open={isSettingsModalOpen}
         onOpenChange={setIsSettingsModalOpen}
@@ -457,9 +457,9 @@ export default function CreateLeadPage() {
         onSave={handleSaveVisibleFields}
       />
 
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-3xl font-bold tracking-tight">Create Lead</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Create Lead</h1>
           <p className="text-sm sm:text-base text-muted-foreground">Add a new lead to your CRM system</p>
         </div>
         {/* --- START OF CHANGE --- */}

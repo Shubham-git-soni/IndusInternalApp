@@ -163,11 +163,11 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Profile</h1>
-          <p className="text-muted-foreground">Manage your account settings and preferences</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Profile</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Manage your account settings and preferences</p>
         </div>
         {user.role === "Administrator" && (
           <Link href="/dashboard/manage-users">

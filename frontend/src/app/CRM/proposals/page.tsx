@@ -777,12 +777,12 @@ export default function ProposalsPage() {
   if (!user) { return <div>Loading...</div> }
 
    return (
-    <div className="flex h-full flex-col space-y-4">
+    <div className="flex h-full flex-col py-3 lg:py-4 space-y-3 lg:space-y-4">
       <div className="flex-shrink-0">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Proposals Sent</h1>
-            <p className="text-muted-foreground">Manage leads for whom a proposal has been sent.</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Proposals Sent</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Manage leads for whom a proposal has been sent.</p>
           </div>
           <div className="flex items-center space-x-2">
             <Button onClick={handleOpenExportModal} variant="outline" disabled={isExporting}>
@@ -796,24 +796,31 @@ export default function ProposalsPage() {
 
       <Card className="flex flex-1 flex-col overflow-hidden">
         <CardHeader className="flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <CardTitle className="text-base sm:text-lg">
               {viewMode === "all" ? "All Sent Proposals" : "My Sent Proposals"}
-              <span className="ml-2 text-sm font-normal text-muted-foreground">({filteredLeads.length} proposals)</span>
+              <span className="ml-2 text-sm font-normal text-muted-foreground">({filteredLeads.length})</span>
             </CardTitle>
-            <div className="flex items-center space-x-2">
-              <Button variant={viewMode === "my" ? "default" : "outline"} size="sm" onClick={() => setViewMode("my")} className="flex items-center space-x-2"><User className="h-4 w-4" /><span>My Proposals</span></Button>
-              <Button variant={viewMode === "all" ? "default" : "outline"} size="sm" onClick={() => setViewMode("all")} className="flex items-center space-x-2"><Users className="h-4 w-4" /><span>All Proposals</span></Button>
+            <div className="flex items-center gap-2">
+              <Button variant={viewMode === "my" ? "default" : "outline"} size="sm" onClick={() => setViewMode("my")} className="flex items-center gap-1.5">
+                <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">My Proposals</span>
+              </Button>
+              <Button variant={viewMode === "all" ? "default" : "outline"} size="sm" onClick={() => setViewMode("all")} className="flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">All Proposals</span>
+              </Button>
             </div>
           </div>
-          <div className="flex items-center space-x-2 pt-4">
-            <div className="relative flex-grow">
-              <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search all columns..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-8 w-full"/>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search proposals..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-8 w-full h-9"/>
             </div>
-            <DropdownMenu>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline"><Columns className="mr-2 h-4 w-4" />Columns</Button>
+                    <Button variant="outline" size="sm" className="hidden lg:flex"><Columns className="mr-2 h-4 w-4" />Columns</Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
@@ -868,6 +875,7 @@ export default function ProposalsPage() {
                 </div>
               </PopoverContent>
             </Popover>
+            </div>
           </div>
           {activeFilterCount > 0 && (
             <div className="flex items-center gap-2 pt-4 flex-wrap">

@@ -485,10 +485,10 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Meeting & Demo Summary</h1>
-        <p className="text-muted-foreground">View, filter, and manage all scheduled events. Double-click an event for more details.</p>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Meeting & Demo Summary</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">View, filter, and manage all scheduled events. Double-click an event for more details.</p>
       </div>
 
       <Card>

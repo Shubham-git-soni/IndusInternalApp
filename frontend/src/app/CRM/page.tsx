@@ -13,21 +13,12 @@ import { MarkAsDoneModal } from "@/components/activity/mark-as-done-modal"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
 
-interface User {
-  id: number
-  username: string
-  email: string
-  role: string
-  department: string
-  usernumber: string
-}
-
 interface Lead {
   id: string
   company_name: string
   contacts: any[]
-  assigned_to: string
-  status: string
+  assigned_to: string | null
+  status: string | null
   [key: string]: any
 }
 
@@ -81,7 +72,7 @@ function DashboardSkeleton() {
     );
   
     return (
-      <div className="space-y-6">
+      <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
         <div className="mb-3 space-y-2"><div className="h-8 w-48 bg-muted rounded animate-pulse"></div><div className="h-5 w-64 bg-muted rounded animate-pulse"></div></div>
         <Card className="animate-pulse">
           <CardHeader><div className="h-6 w-40 bg-muted rounded"></div><div className="h-4 w-56 bg-muted rounded mt-1"></div></CardHeader>
@@ -137,7 +128,7 @@ function TaskCard({ task, onClick, isUpcoming = false, isOverdue = false }: { ta
 
 export default function DashboardPage() {
     const router = useRouter();
-    const [user, setUser] = useState<User | null>(null)
+    const [user, setUser] = useState<ApiUser | null>(null)
     const [leads, setLeads] = useState<Lead[]>([])
     const [allUnifiedTasks, setAllUnifiedTasks] = useState<UnifiedTask[]>([])
     const [totalMeetings, setTotalMeetings] = useState(0);
@@ -146,24 +137,30 @@ export default function DashboardPage() {
     const [leadStatusData, setLeadStatusData] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [dynamicChartConfig, setDynamicChartConfig] = useState(BASE_CHART_CONFIG);
-  
+
     const [activityToComplete, setActivityToComplete] = useState<ApiReminder | null>(null);
     const [isDoneModalOpen, setDoneModalOpen] = useState(false);
     const [taskToTakeActionOn, setTaskToTakeActionOn] = useState<ApiTask | null>(null);
     const [isTaskModalOpen, setTaskModalOpen] = useState(false);
 
-    const loadDashboardData = useCallback(async (currentUser: User) => {
+    const loadDashboardData = useCallback(async (currentUser: ApiUser) => {
         try {
             setLoading(true);
-            const [leadsData, proposalsData, allMeetings, allDemos, allReminders, usersData, allTasksData] = await Promise.all([
-                api.getAllLeads(),
-                api.getAllProposals(),
-                api.getAllMeetings(),
-                api.getAllDemos(),
-                api.getAllReminders(),
-                api.getUsers(),
-                api.getTasksForUser(currentUser.id)
-            ]);
+
+            // DUMMY DATA - Replace with actual API calls when backend is ready
+            const leadsData: ApiLead[] = [
+                { id: 1, company_name: "Tech Corp", email: "contact@techcorp.com", assigned_to: currentUser.username, status: "New", contacts: [], created_at: new Date().toISOString(), company_name: "Tech Corp" },
+                { id: 2, company_name: "Digital Solutions", email: "info@digital.com", assigned_to: currentUser.username, status: "Meeting Scheduled", contacts: [], created_at: new Date().toISOString(), company_name: "Digital Solutions" },
+                { id: 3, company_name: "Startup Inc", email: "hello@startup.com", assigned_to: "other_user", status: "Demo Done", contacts: [], created_at: new Date().toISOString(), company_name: "Startup Inc" },
+            ];
+            const proposalsData: ApiProposalSent[] = [];
+            const allMeetings: ApiMeeting[] = [];
+            const allDemos: ApiDemo[] = [];
+            const allReminders: ApiReminder[] = [];
+            const usersData: ApiUser[] = [
+                { id: 1, username: currentUser.username, email: currentUser.email, role: currentUser.role, company_name: currentUser.company_name, usernumber: "USR001" }
+            ];
+            const allTasksData: ApiTask[] = [];
     
             const leadsMap = new Map<number, ApiLead>(leadsData.map(lead => [lead.id, lead]));
             const proposalsMap = new Map<number, ApiProposalSent>(proposalsData.map(p => [p.id, p]));
@@ -292,8 +289,8 @@ export default function DashboardPage() {
   
     return (
       <>
-        <div className="space-y-6">
-          <div className="mb-3"><h1 className="text-xl md:text-3xl font-bold tracking-tight">Dashboard</h1><p className="text-xs md:text-base text-muted-foreground">Welcome back, {user.username}!{user.role === "admin" ? " (Admin)" : ""}</p></div>
+        <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
+          <div className="mb-3"><h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Dashboard</h1><p className="text-sm sm:text-base text-muted-foreground">Welcome back, {user.username}!{user.role === "admin" ? " (Admin)" : ""}</p></div>
           {overdueTasks.length > 0 && (
             <Card className="border-destructive/50"><CardHeader><CardTitle className="text-destructive">Overdue Items</CardTitle><CardDescription>These items require your immediate attention.</CardDescription></CardHeader>
               <CardContent>

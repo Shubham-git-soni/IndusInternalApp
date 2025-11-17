@@ -52,11 +52,11 @@ export default function DripMasterPage() {
     );
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
+        <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Drip Master</h1>
-                    <p className="text-muted-foreground">Manage your automated messaging sequences.</p>
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Drip Master</h1>
+                    <p className="text-sm sm:text-base text-muted-foreground">Manage your automated messaging sequences.</p>
                 </div>
                 <div className="flex items-center gap-4">
                     <Button variant="outline" onClick={() => router.push("/dashboard/drip-sequence/assign")}>

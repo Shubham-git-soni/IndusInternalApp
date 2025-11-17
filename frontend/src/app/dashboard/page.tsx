@@ -88,7 +88,7 @@ const Dashboard = () => {
   // All available application modules
   const allModules = [
     { name: 'HRM', icon: Users, path: '/hrm', colorVar: '--module-blue' },
-    { name: 'CRM', icon: Briefcase, path: '/crm', colorVar: '--module-green' },
+    { name: 'CRM', icon: Briefcase, path: '/CRM', colorVar: '--module-green' },
     { name: 'Projects & Tasks', icon: KanbanSquare, path: '/projectmanagement', colorVar: '--module-purple' },
     { name: 'Ticket Management', icon: Briefcase, path: '/ticketmanagement',colorVar: '--module-indigo' },
     { name: 'Asset', icon: Package, path: '/assets', colorVar: '--module-teal' },

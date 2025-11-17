@@ -431,11 +431,11 @@ export default function ActivityPage() {
 
     return (
         <>
-            <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Activity Management</h1>
-                        <p className="text-muted-foreground">Log, schedule, and complete activities with your leads.</p>
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Activity Management</h1>
+                        <p className="text-sm sm:text-base text-muted-foreground">Log, schedule, and complete activities with your leads.</p>
                     </div>
                     <div className="flex gap-2">
                         <Button variant="outline" onClick={() => setLogModalOpen(true)}><PlusCircle className="mr-2 h-4 w-4" />Log an Activity</Button>

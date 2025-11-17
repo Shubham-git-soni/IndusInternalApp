@@ -30,7 +30,7 @@ export default function EditAssetPage() {
 
   return (
     <DashboardLayout>
-      <div className="pt-20 pb-8 px-4 lg:px-6 space-y-6 bg-background min-h-screen">
+      <div className="py-3 lg:py-4 space-y-3 lg:space-y-4 bg-background min-h-screen">
         
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}><ArrowLeft className="h-5 w-5" /></Button>

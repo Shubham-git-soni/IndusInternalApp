@@ -389,7 +389,7 @@ export default function AllTicketsPage() {
 
   return (
     <DashboardLayout>
-      <div className="pt-20 sm:pt-20 lg:pt-20 pb-20 lg:pb-6 px-4 lg:px-6 space-y-4 lg:space-y-6">
+      <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
         <PageHeader
           title="All Tickets"
           description="Comprehensive ticket management and tracking"

@@ -13,8 +13,10 @@ export default function HomePage() {
     // Check if user is logged in
     const user = localStorage.getItem('user');
 
+
     if (user) {
-      router.replace('/dashboard');
+      router.replace('/dashboard'); 
+       console.log (user)
     } else {
       router.replace('/login');
     }

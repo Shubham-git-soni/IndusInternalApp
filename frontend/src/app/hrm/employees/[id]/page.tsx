@@ -120,9 +120,9 @@ export default function TeamMemberProfilePage() {
           scrollbar-width: none;
         }
       `}</style>
-      <div className="pt-16 pb-24 lg:pb-4 px-3 sm:px-4 space-y-4 sm:space-y-6">
+      <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
         {/* Header - Mobile Optimized */}
-        <div className="pt-2 sm:pt-4">
+        <div>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
             <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
               <Button

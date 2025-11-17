@@ -113,9 +113,9 @@ export default function EmployeesPage() {
 
   return (
     <DashboardLayout>
-      <div className="pt-16 pb-20 lg:pb-4 px-3 sm:px-4 space-y-4 sm:space-y-6">
+      <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
         {/* Header - Mobile Optimized */}
-        <div className="pt-2 sm:pt-4">
+        <div>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-foreground">Team Member Directory</h1>

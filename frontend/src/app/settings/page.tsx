@@ -29,9 +29,9 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
-      <div className="pt-16 pb-20 lg:pb-4 px-4">
+      <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
         {/* Header */}
-        <div className="flex items-center space-x-4 mb-6 pt-4">
+        <div className="flex items-center space-x-4 mb-4">
           <button
             onClick={() => router.back()}
             className="p-2 rounded-lg hover:bg-accent transition-colors"

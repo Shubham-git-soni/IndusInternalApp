@@ -110,11 +110,11 @@ export default function ReportsPage() {
 
   return (
     <>
-      <div className="space-y-6 pb-6 px-2 md:px-0">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-2">
+      <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
             <div>
-                <h1 className="text-xl md:text-3xl font-bold tracking-tight">User Performance Report</h1>
-                <p className="text-xs md:text-base text-muted-foreground">Analyze user performance for a selected time period.</p>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">User Performance Report</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">Analyze user performance for a selected time period.</p>
             </div>
             <div className="flex items-center gap-2">
                 <Button onClick={handleExportToPDF} disabled={!reportData || isPdfExporting || loading} variant="outline"><Download className="mr-2 h-4 w-4" /> Export to PDF</Button>

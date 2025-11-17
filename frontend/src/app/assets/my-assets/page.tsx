@@ -62,7 +62,7 @@ export default function MyAssetsPage() {
 
   return (
     <DashboardLayout>
-      <div className="pt-20 pb-20 sm:pb-8 px-4 lg:px-6 space-y-6 bg-background min-h-screen">
+      <div className="py-3 lg:py-4 space-y-3 lg:space-y-4 bg-background min-h-screen">
         
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>

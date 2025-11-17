@@ -7,7 +7,6 @@ import {
   UserPlus,
   Building2,
   Award,
-  Clock,
   MoreHorizontal,
   CalendarCheck,
   DollarSign
@@ -21,7 +20,6 @@ import { apiClient, type EmployeeStats } from '@/services/api';
 
 const HRMPage = () => {
   // --- STATE ---
-  const [showAllActions, setShowAllActions] = useState(false);
   const [showActionsModal, setShowActionsModal] = useState(false);
   const [stats, setStats] = useState<EmployeeStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -125,6 +123,16 @@ const HRMPage = () => {
     <DashboardLayout>
       {/* Main Content - Fully Responsive */}
       <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
+
+        {/* Header - Mobile Optimized */}
+        <div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">HRM Dashboard</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">Manage your team members and HR operations</p>
+            </div>
+          </div>
+        </div>
 
         {/* Mobile: Left/Right Split | Desktop: Horizontal KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">

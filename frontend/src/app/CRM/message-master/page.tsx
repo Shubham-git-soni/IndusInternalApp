@@ -65,11 +65,11 @@ export default function MessageMasterPage() {
     if (!user) return <div>Loading...</div>;
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
+        <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Message Master</h1>
-                    <p className="text-muted-foreground">Manage your reusable message templates for drip sequences.</p>
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Message Master</h1>
+                    <p className="text-sm sm:text-base text-muted-foreground">Manage your reusable message templates for drip sequences.</p>
                 </div>
                 <Button onClick={() => setIsCreateModalOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
