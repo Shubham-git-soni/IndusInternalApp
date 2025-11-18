@@ -1,1 +1,11 @@
-{"Version":1,"Hash":"MrNxRu5t8jfViO+5FcI+b4SOeZ8/o9nhIm5CV6W/Gw0=","Source":"Indus.Api","BasePath":"_content/Indus.Api","Mode":"Default","ManifestType":"Build","ReferencedProjectsConfiguration":[],"DiscoveryPatterns":[],"Assets":[],"Endpoints":[]}
+{
+  "Version": 1,
+  "Hash": "Qz2VtwSyIbD/B4D6I1q7egVL814ImIsYuorf/BActkI=",
+  "Source": "Indus.Api",
+  "BasePath": "_content/Indus.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

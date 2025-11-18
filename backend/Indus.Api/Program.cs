@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;   // ✅ Add this namespace
 using Indus.Api.Data;
+using Indus.Api.Interfaces;
 using Indus.Api.Repositories;
-using Indus.Api.Services;              // ✅ Replace with the actual namespace where IndusDbContext is
-using Microsoft.AspNetCore.Authentication.Cookies; // <-- Add this for Cookie Authentication
+using Indus.Api.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
-var builder = WebApplication.CreateBuilder(args); 
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCors(options =>
 {
@@ -23,21 +23,25 @@ builder.Services.AddCors(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ✅ Add this line to support controllers (needed if you plan to use Web API controllers)
 builder.Services.AddControllers();
 
-// ✅ Get the connection string from appsettings.json
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// Register ADO.NET Database Connection
+builder.Services.AddSingleton<DatabaseConnection>();
 
-// ✅ Register DbContext with the connection string
-builder.Services.AddDbContext<IndusDbContext>(options =>
-    options.UseSqlServer(connectionString)); 
+// Register Repositories (Data Access Layer)
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepositoryAdo>();
+builder.Services.AddScoped<IDepartmentRepository, DepartmentRepositoryAdo>();
+builder.Services.AddScoped<IDesignationRepository, DesignationRepositoryAdo>();
+builder.Services.AddScoped<IRoleRepository, RoleRepositoryAdo>();
 
-// Register our services and repositories for Dependency Injection
-builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
-builder.Services.AddScoped<AuthService>();  
+// Register Services (Business Logic Layer)
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+builder.Services.AddScoped<IDesignationService, DesignationService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<AuthService>();
 
-// ***** YAHAN PAR AUTHENTICATION KA CODE ADD KAREIN *****
+// ***** AUTHENTICATION SETUP *****
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -45,7 +49,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
         
-        // API ke liye zaroori events
+        // API events
         options.Events.OnRedirectToLogin = context =>
         {
             context.Response.StatusCode = 401; // Unauthorized
@@ -58,9 +62,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         };
     });
 
-// Authorization ko bhi register karein
 builder.Services.AddAuthorization();
-// ***** YAHAN TAK AUTHENTICATION KA CODE ADD HUA *****
 
 
 var app = builder.Build();
@@ -74,13 +76,10 @@ if (app.Environment.IsDevelopment())
 
 // app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
-// ***** YAHAN PAR AUTHENTICATION MIDDLEWARE ADD KAREIN *****
-// Routing se pehle aur HttpsRedirection ke baad
 app.UseAuthentication();
 app.UseAuthorization();
-// ***** YAHAN TAK MIDDLEWARE ADD HUA *****
 
-app.MapControllers();  // ✅ Important: Enables controller endpoints
+app.MapControllers();
 
 
 app.Run();

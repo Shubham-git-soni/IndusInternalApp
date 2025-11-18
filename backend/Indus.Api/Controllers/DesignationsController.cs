@@ -1,6 +1,5 @@
-using Indus.Api.Data;
+using Indus.Api.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Indus.Api.Controllers
 {
@@ -8,11 +7,11 @@ namespace Indus.Api.Controllers
     [ApiController]
     public class DesignationsController : ControllerBase
     {
-        private readonly IndusDbContext _context;
+        private readonly IDesignationService _designationService;
 
-        public DesignationsController(IndusDbContext context)
+        public DesignationsController(IDesignationService designationService)
         {
-            _context = context;
+            _designationService = designationService;
         }
 
         // GET: /api/designations
@@ -23,11 +22,15 @@ namespace Indus.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetDesignations()
         {
-            var designations = await _context.Designations
-                .Select(d => new { id = d.DesignationID, name = d.DesignationName })
-                .ToListAsync();
+            var designations = await _designationService.GetAllDesignationsAsync();
 
-            return Ok(designations);
+            var result = designations.Select(d => new
+            {
+                id = d.DesignationID,
+                name = d.DesignationName
+            });
+
+            return Ok(result);
         }
     }
 }

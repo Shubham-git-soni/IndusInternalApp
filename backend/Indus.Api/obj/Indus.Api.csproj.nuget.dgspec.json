@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\IndusInternalApp\\backend\\Indus.Api\\Indus.Api.csproj": {}
+    "E:\\IndusInternalApp 1\\backend\\Indus.Api\\Indus.Api.csproj": {}
   },
   "projects": {
-    "D:\\IndusInternalApp\\backend\\Indus.Api\\Indus.Api.csproj": {
+    "E:\\IndusInternalApp 1\\backend\\Indus.Api\\Indus.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\IndusInternalApp\\backend\\Indus.Api\\Indus.Api.csproj",
+        "projectUniqueName": "E:\\IndusInternalApp 1\\backend\\Indus.Api\\Indus.Api.csproj",
         "projectName": "Indus.Api",
-        "projectPath": "D:\\IndusInternalApp\\backend\\Indus.Api\\Indus.Api.csproj",
+        "projectPath": "E:\\IndusInternalApp 1\\backend\\Indus.Api\\Indus.Api.csproj",
         "packagesPath": "C:\\Users\\Hp\\.nuget\\packages\\",
-        "outputPath": "D:\\IndusInternalApp\\backend\\Indus.Api\\obj\\",
+        "outputPath": "E:\\IndusInternalApp 1\\backend\\Indus.Api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -26,6 +26,7 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -58,21 +59,9 @@
               "target": "Package",
               "version": "[8.0.20, )"
             },
-            "Microsoft.EntityFrameworkCore.Design": {
-              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
-              "suppressParent": "All",
+            "Microsoft.Data.SqlClient": {
               "target": "Package",
-              "version": "[8.0.10, )"
-            },
-            "Microsoft.EntityFrameworkCore.SqlServer": {
-              "target": "Package",
-              "version": "[8.0.10, )"
-            },
-            "Microsoft.EntityFrameworkCore.Tools": {
-              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[8.0.10, )"
+              "version": "[5.2.0, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
@@ -98,7 +87,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

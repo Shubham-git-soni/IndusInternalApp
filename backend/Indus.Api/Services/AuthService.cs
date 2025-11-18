@@ -1,5 +1,5 @@
 using Indus.Api.Models;
-using Indus.Api.Repositories;
+using Indus.Api.Interfaces;
 using Indus.Api.Controllers;
 
 // Ensure the namespace is exactly this

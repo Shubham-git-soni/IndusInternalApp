@@ -1,6 +1,6 @@
 // File: Controllers/AdminController.cs
 
-using Indus.Api.Repositories;
+using Indus.Api.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

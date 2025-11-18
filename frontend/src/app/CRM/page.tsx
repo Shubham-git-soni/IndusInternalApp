@@ -1,0 +1,350 @@
+"use client"
+
+import { useEffect, useState, useCallback } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
+import { Calendar, Clock, Users, Phone, FileText, CheckCircle, MessageSquare, User as UserIcon, Monitor, CheckSquare } from "lucide-react"
+import { formatDateTime, parseAsUTCDate } from "@/lib/date-format"
+import { api, ApiUser, ApiMeeting, type ApiProposalSent, type ApiDemo, type ApiReminder, type ApiActivity, type ApiLead, ApiTask } from "@/lib/api"
+import { MarkAsDoneModal } from "@/components/activity/mark-as-done-modal"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, } from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
+
+interface Lead {
+  id: string
+  company_name: string
+  contacts: any[]
+  assigned_to: string | null
+  status: string | null
+  [key: string]: any
+}
+
+interface UnifiedTask {
+  id: string;
+  numericId: number;
+  lead_id: number | null;
+  proposal_id?: number | null;
+  original_lead_id?: number; 
+  type: 'meeting' | 'demo' | 'reminder' | 'task';
+  activity_type_display: string;
+  title: string;
+  companyName: string;
+  contactName: string;
+  assignedTo: string;
+  startTime: string;
+  endTime: string;
+  details: string;
+  status?: string;
+  raw_activity: ApiReminder | ApiMeeting | ApiDemo | ApiTask;
+}
+
+const BASE_CHART_CONFIG = {
+  new: { label: "New Leads", color: "hsl(220, 85%, 55%)" },
+  "Meeting Scheduled": { label: "Meeting Scheduled", color: "hsl(180, 85%, 45%)" },
+  "Demo Scheduled": { label: "Demo Scheduled", color: "hsl(195, 90%, 50%)" },
+  "Meeting Done": { label: "Meeting Done", color: "hsl(142, 85%, 45%)" },
+  "Demo Done": { label: "Demo Done", color: "hsl(280, 80%, 60%)" },
+  "Won/Deal Done": { label: "Won/Closed", color: "hsl(120, 85%, 40%)" },
+  Lost: { label: "Lost", color: "hsl(0, 90%, 65%)" },
+}
+
+const generateColorFromString = (str: string): string => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  const hue = Math.abs(hash % 360);
+  return `hsl(${hue}, 70%, 55%)`;
+};
+
+function DashboardSkeleton() {
+    const SkeletonCard = () => <div className="h-full w-full bg-muted rounded-lg animate-pulse"></div>;
+    const SkeletonTask = () => (
+      <div className="flex items-start gap-3 p-2">
+        <div className="h-5 w-5 bg-muted-foreground/20 rounded-md animate-pulse mt-1"></div>
+        <div className="flex-1 space-y-2">
+          <div className="h-4 w-3/4 bg-muted-foreground/20 rounded animate-pulse"></div>
+          <div className="h-3 w-1/2 bg-muted-foreground/20 rounded animate-pulse"></div>
+        </div>
+        <div className="h-4 w-12 bg-muted-foreground/20 rounded animate-pulse"></div>
+      </div>
+    );
+  
+    return (
+      <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
+        <div className="mb-3 space-y-2"><div className="h-8 w-48 bg-muted rounded animate-pulse"></div><div className="h-5 w-64 bg-muted rounded animate-pulse"></div></div>
+        <Card className="animate-pulse">
+          <CardHeader><div className="h-6 w-40 bg-muted rounded"></div><div className="h-4 w-56 bg-muted rounded mt-1"></div></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">{[...Array(4)].map((_, i) => (<div key={i} className="space-y-4"><div className="h-6 w-24 bg-muted rounded"></div><div className="space-y-4 rounded-lg border p-2"><div><div className="h-4 w-16 bg-muted rounded mx-2 mb-2"></div><div className="space-y-2 h-48 pr-2"><SkeletonTask /><SkeletonTask /><SkeletonTask /></div></div><div className="pt-2"><div className="h-4 w-20 bg-muted rounded mx-2 mb-2"></div><div className="space-y-2 h-48 pr-2"><SkeletonTask /></div></div></div></div>))}</div>
+          </CardContent>
+        </Card>
+        <div className="grid gap-4 pt-4 grid-cols-1 lg:grid-cols-5"><div className="lg:col-span-2 h-[400px] bg-muted rounded-lg animate-pulse"></div><div className="lg:col-span-3 grid grid-cols-2 gap-4"><SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard /></div></div>
+      </div>
+    );
+}
+
+function TaskTypeIcon({ type }: { type: string }) {
+    const lowerType = type.toLowerCase();
+    if (lowerType.includes("meeting")) return <Users className="h-4 w-4 text-primary mt-1" />;
+    if (lowerType.includes("demo")) return <Monitor className="h-4 w-4 text-primary mt-1" />;
+    if (lowerType.includes("follow-up") || lowerType.includes("call")) return <Phone className="h-4 w-4 text-primary mt-1" />;
+    if (lowerType === 'task') return <CheckSquare className="h-4 w-4 text-primary mt-1" />;
+    if (lowerType.includes("whatsapp")) return <MessageSquare className="h-4 w-4 text-primary mt-1" />;
+    return <CheckCircle className="h-4 w-4 text-muted-foreground mt-1" />;
+}
+
+function TaskCard({ task, onClick, isUpcoming = false, isOverdue = false }: { task: UnifiedTask; onClick: () => void; isUpcoming?: boolean; isOverdue?: boolean }) {
+    const timeString = task.endTime && parseAsUTCDate(task.startTime)!.getTime() !== parseAsUTCDate(task.endTime)!.getTime()
+      ? `${formatDateTime(task.startTime).split(',')[2]} - ${formatDateTime(task.endTime).split(',')[2]}`
+      : formatDateTime(task.startTime).split(',')[2];
+    
+    const dateString = formatDateTime(task.startTime).split(',').slice(0, 2).join(',');
+  
+    return (
+      <div key={task.id} className="flex items-start gap-3 rounded-lg border p-2 cursor-pointer hover:bg-muted/50 transition-colors text-sm" onClick={onClick}>
+        <TaskTypeIcon type={task.type} />
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold truncate text-sm" title={task.companyName}>{task.companyName}</p>
+          <p className="text-xs text-primary font-medium truncate" title={task.activity_type_display}>{task.activity_type_display}</p>
+          <div className="text-xs text-muted-foreground mt-1.5 space-y-1">
+            {task.type !== 'task' && <div className="flex items-center gap-1.5"><UserIcon className="h-3 w-3" /><span className="truncate" title={task.contactName}> {task.contactName || 'N/A'}</span></div>}
+            <div className="flex items-center gap-1.5"><Users className="h-3 w-3" /><span className="truncate" title={task.assignedTo}>{task.assignedTo}</span></div>
+            {task.type === 'task' && task.status && <div className="flex items-center gap-1.5 font-medium">{task.status === 'Pending' ? <Clock className="h-3 w-3 text-muted-foreground" /> : <CheckCircle className="h-3 w-3 text-primary" />}<span>{task.status}</span></div>}
+          </div>
+        </div>
+        <div className="text-xs font-semibold text-muted-foreground text-right flex-shrink-0">
+          {isUpcoming || isOverdue ? (
+            <div className={`flex flex-col items-end ${isOverdue ? 'text-destructive' : ''}`}>
+              <span>{dateString}</span>
+              <span className={`font-normal ${isOverdue ? 'text-destructive' : 'text-muted-foreground'}`}>{timeString}</span>
+            </div>
+          ) : ( <span>{timeString}</span> )}
+        </div>
+      </div>
+    );
+}
+
+export default function DashboardPage() {
+    const router = useRouter();
+    const [user, setUser] = useState<ApiUser | null>(null)
+    const [leads, setLeads] = useState<Lead[]>([])
+    const [allUnifiedTasks, setAllUnifiedTasks] = useState<UnifiedTask[]>([])
+    const [totalMeetings, setTotalMeetings] = useState(0);
+    const [totalDemos, setTotalDemos] = useState(0);
+    const [totalTasks, setTotalTasks] = useState(0);
+    const [leadStatusData, setLeadStatusData] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+    const [dynamicChartConfig, setDynamicChartConfig] = useState(BASE_CHART_CONFIG);
+
+    const [activityToComplete, setActivityToComplete] = useState<ApiReminder | null>(null);
+    const [isDoneModalOpen, setDoneModalOpen] = useState(false);
+    const [taskToTakeActionOn, setTaskToTakeActionOn] = useState<ApiTask | null>(null);
+    const [isTaskModalOpen, setTaskModalOpen] = useState(false);
+
+    const loadDashboardData = useCallback(async (currentUser: ApiUser) => {
+        try {
+            setLoading(true);
+
+            // DUMMY DATA - Replace with actual API calls when backend is ready
+            const leadsData: ApiLead[] = [
+                { id: 1, company_name: "Tech Corp", email: "contact@techcorp.com", assigned_to: currentUser.username, status: "New", contacts: [], created_at: new Date().toISOString(), company_name: "Tech Corp" },
+                { id: 2, company_name: "Digital Solutions", email: "info@digital.com", assigned_to: currentUser.username, status: "Meeting Scheduled", contacts: [], created_at: new Date().toISOString(), company_name: "Digital Solutions" },
+                { id: 3, company_name: "Startup Inc", email: "hello@startup.com", assigned_to: "other_user", status: "Demo Done", contacts: [], created_at: new Date().toISOString(), company_name: "Startup Inc" },
+            ];
+            const proposalsData: ApiProposalSent[] = [];
+            const allMeetings: ApiMeeting[] = [];
+            const allDemos: ApiDemo[] = [];
+            const allReminders: ApiReminder[] = [];
+            const usersData: ApiUser[] = [
+                { id: 1, username: currentUser.username, email: currentUser.email, role: currentUser.role, company_name: currentUser.company_name, usernumber: "USR001" }
+            ];
+            const allTasksData: ApiTask[] = [];
+    
+            const leadsMap = new Map<number, ApiLead>(leadsData.map(lead => [lead.id, lead]));
+            const proposalsMap = new Map<number, ApiProposalSent>(proposalsData.map(p => [p.id, p]));
+            const userMap = new Map<string, string>((usersData || []).map(user => [user.usernumber, user.username]));
+    
+            const filteredLeads = currentUser.role === "admin" ? leadsData : leadsData.filter(lead => lead.assigned_to === currentUser.username);
+            setLeads(filteredLeads.map(lead => ({ ...lead, id: String(lead.id), contacts: lead.contacts ?? [] })));
+    
+            const pendingMeetings = allMeetings.filter(e => e.phase === "Scheduled" || e.phase === "Pending" || e.phase === "Rescheduled");
+            const pendingDemos = allDemos.filter(e => e.phase === "Scheduled" || e.phase === "Pending" || e.phase === "Rescheduled");
+            const pendingReminders = allReminders.filter(a => ['pending', 'sent', 'failed'].includes(a.status.toLowerCase()) && !a.is_hidden_from_activity_log);
+            const pendingTasks = allTasksData.filter(t => t.status !== 'Completed');
+
+            const combinedTasks: UnifiedTask[] = [];
+    
+            pendingMeetings.forEach(m => {
+                const parent = m.lead_id ? leadsMap.get(m.lead_id) : m.proposal_id ? proposalsMap.get(m.proposal_id) : undefined;
+                combinedTasks.push({ id: `meeting-${m.id}`, numericId: m.id, lead_id: m.lead_id, proposal_id: m.proposal_id, original_lead_id: (parent as ApiProposalSent)?.original_lead_id, type: 'meeting', title: "Meeting", activity_type_display: m.meeting_type || "General Meeting", companyName: parent?.company_name || 'Unknown', contactName: parent?.contacts?.[0]?.contact_name || 'N/A', assignedTo: userMap.get(m.assigned_to) || m.assigned_to, startTime: m.event_time, endTime: m.event_end_time, details: `Scheduled meeting.`, raw_activity: m });
+            });
+    
+            pendingDemos.forEach(d => {
+                const parent = d.lead_id ? leadsMap.get(d.lead_id) : d.proposal_id ? proposalsMap.get(d.proposal_id) : undefined;
+                combinedTasks.push({ id: `demo-${d.id}`, numericId: d.id, lead_id: d.lead_id, proposal_id: d.proposal_id, original_lead_id: (parent as ApiProposalSent)?.original_lead_id, type: 'demo', title: "Demo", activity_type_display: "Product Demo", companyName: parent?.company_name || 'Unknown', contactName: parent?.contacts?.[0]?.contact_name || 'N/A', assignedTo: userMap.get(d.assigned_to) || d.assigned_to, startTime: d.start_time, endTime: d.event_end_time, details: `Scheduled demo.`, raw_activity: d });
+            });
+    
+            pendingReminders.forEach(a => {
+                const lead = leadsMap.get(a.lead_id);
+                if (lead) combinedTasks.push({ id: `reminder-${a.id}`, numericId: a.id, lead_id: a.lead_id, type: 'reminder', title: a.activity_type || "Reminder", activity_type_display: a.message, companyName: lead.company_name, contactName: lead.contacts?.[0]?.contact_name || 'N/A', assignedTo: userMap.get(a.assigned_to) || a.assigned_to, startTime: a.remind_time, endTime: a.remind_time, details: a.message, raw_activity: a });
+            });
+
+            pendingTasks.forEach(t => {
+                combinedTasks.push({ id: `task-${t.id}`, numericId: t.id, lead_id: t.lead_ids ? parseInt(t.lead_ids.split(',')[0]) : null, type: 'task', title: "Task", activity_type_display: t.title, companyName: t.company_names || 'General Task', contactName: 'N/A', assignedTo: t.assigned_to_username, startTime: t.due_date, endTime: t.due_date, details: t.details || 'No details provided.', status: t.status, raw_activity: t });
+            });
+    
+            combinedTasks.sort((a, b) => parseAsUTCDate(a.startTime)!.getTime() - parseAsUTCDate(b.startTime)!.getTime());
+            setAllUnifiedTasks(combinedTasks);
+    
+            setTotalMeetings(allMeetings.length);
+            setTotalDemos(allDemos.length);
+            setTotalTasks(allTasksData.length);
+    
+            const statusCounts = filteredLeads.reduce((acc, lead) => { const status = lead.status || "Unknown"; acc[status] = (acc[status] || 0) + 1; return acc; }, {} as Record<string, number>);
+            const finalChartConfig = { ...BASE_CHART_CONFIG };
+            const chartData = Object.entries(statusCounts).map(([status, count]) => {
+                if (!finalChartConfig[status as keyof typeof finalChartConfig]) finalChartConfig[status as keyof typeof finalChartConfig] = { label: status, color: generateColorFromString(status) };
+                return { name: status, value: count, fill: finalChartConfig[status as keyof typeof finalChartConfig].color, label: finalChartConfig[status as keyof typeof finalChartConfig].label };
+            });
+            setLeadStatusData(chartData);
+            setDynamicChartConfig(finalChartConfig);
+        } catch (error) {
+            console.error("Error loading dashboard data:", error)
+            toast.error("Failed to load dashboard data.")
+        } finally {
+            setLoading(false)
+        }
+    }, []);
+  
+    useEffect(() => {
+      const userData = localStorage.getItem("user");
+      if (!userData) { setLoading(false); router.push("/login"); return; }
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+      loadDashboardData(parsedUser);
+    }, [loadDashboardData, router]);
+  
+    const handleSuccess = () => {
+      setDoneModalOpen(false);
+      if(user) loadDashboardData(user);
+    }
+  
+    const handleStartTask = async (taskId: number) => {
+        try {
+            await api.updateTaskStatus(taskId, 'In Progress');
+            toast.success("Task is now in progress.");
+            if(user) loadDashboardData(user);
+        } catch (error: any) {
+            toast.error("Failed to start task.", { description: error.message });
+        }
+    };
+
+    const handleTaskClick = (task: UnifiedTask) => {
+        if (task.type === 'meeting' || task.type === 'demo') {
+            const leadIdForNav = task.original_lead_id || task.lead_id;
+            if (leadIdForNav) router.push(`/dashboard/post-${task.type}?leadId=${leadIdForNav}&${task.type}Id=${task.numericId}`);
+        } else if (task.type === 'reminder') {
+            setActivityToComplete(task.raw_activity as ApiReminder);
+            setDoneModalOpen(true);
+        } else if (task.type === 'task') {
+            const rawTask = task.raw_activity as ApiTask;
+            if (rawTask.status === 'Pending') {
+                setTaskToTakeActionOn(rawTask);
+                setTaskModalOpen(true);
+            } else if (rawTask.status === 'In Progress') {
+                router.push('/dashboard/tasks');
+            }
+        }
+    };
+  
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const endOfToday = new Date(); endOfToday.setHours(23, 59, 59, 999);
+    const tomorrow = new Date(todayStart); tomorrow.setDate(tomorrow.getDate() + 1);
+    const endOfNextWeek = new Date(todayStart); endOfNextWeek.setDate(endOfNextWeek.getDate() + 7); endOfNextWeek.setHours(23, 59, 59, 999);
+  
+    const overdueTasks = allUnifiedTasks.filter(task => parseAsUTCDate(task.startTime)! < todayStart).sort((a, b) => parseAsUTCDate(b.startTime)!.getTime() - parseAsUTCDate(a.startTime)!.getTime());
+    const todaysTasks = allUnifiedTasks.filter(task => { const d = parseAsUTCDate(task.startTime)!; return d >= todayStart && d <= endOfToday; });
+    const upcomingTasks = allUnifiedTasks.filter(task => { const d = parseAsUTCDate(task.startTime)!; return d >= tomorrow && d <= endOfNextWeek; });
+  
+    const overdueMeetings = overdueTasks.filter(t => t.type === 'meeting');
+    const overdueDemos = overdueTasks.filter(t => t.type === 'demo');
+    const overdueActivities = overdueTasks.filter(t => t.type === 'reminder');
+    const overdueSystemTasks = overdueTasks.filter(t => t.type === 'task');
+
+    const todaysMeetings = todaysTasks.filter(t => t.type === 'meeting');
+    const todaysDemos = todaysTasks.filter(t => t.type === 'demo');
+    const todaysActivities = todaysTasks.filter(t => t.type === 'reminder');
+    const todaysSystemTasks = todaysTasks.filter(t => t.type === 'task');
+
+    const upcomingMeetings = upcomingTasks.filter(t => t.type === 'meeting');
+    const upcomingDemos = upcomingTasks.filter(t => t.type === 'demo');
+    const upcomingActivities = upcomingTasks.filter(t => t.type === 'reminder');
+    const upcomingSystemTasks = upcomingTasks.filter(t => t.type === 'task');
+
+    if (loading || !user) {
+      return <DashboardSkeleton />;
+    }
+  
+    return (
+      <>
+        <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
+          <div className="mb-3"><h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Dashboard</h1><p className="text-sm sm:text-base text-muted-foreground">Welcome back, {user.username}!{user.role === "admin" ? " (Admin)" : ""}</p></div>
+          {overdueTasks.length > 0 && (
+            <Card className="border-destructive/50"><CardHeader><CardTitle className="text-destructive">Overdue Items</CardTitle><CardDescription>These items require your immediate attention.</CardDescription></CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    {/* Overdue Columns */}
+                    <div className="space-y-4"><div className="flex items-center gap-2 px-1"><Users className="h-5 w-5 text-primary" /><h3 className="text-lg font-semibold">Meetings</h3></div><div className="space-y-2 rounded-lg border p-2 h-80 overflow-y-auto pr-2">{overdueMeetings.length > 0 ? overdueMeetings.map((task) => <TaskCard key={task.id} task={task} onClick={() => handleTaskClick(task)} isOverdue />) : <p className="p-2 h-full flex items-center justify-center text-xs text-muted-foreground">No overdue meetings.</p>}</div></div>
+                    <div className="space-y-4"><div className="flex items-center gap-2 px-1"><Monitor className="h-5 w-5 text-primary" /><h3 className="text-lg font-semibold">Demos</h3></div><div className="space-y-2 rounded-lg border p-2 h-80 overflow-y-auto pr-2">{overdueDemos.length > 0 ? overdueDemos.map((task) => <TaskCard key={task.id} task={task} onClick={() => handleTaskClick(task)} isOverdue />) : <p className="p-2 h-full flex items-center justify-center text-xs text-muted-foreground">No overdue demos.</p>}</div></div>
+                    <div className="space-y-4"><div className="flex items-center gap-2 px-1"><Phone className="h-5 w-5 text-primary" /><h3 className="text-lg font-semibold">Activities</h3></div><div className="space-y-2 rounded-lg border p-2 h-80 overflow-y-auto pr-2">{overdueActivities.length > 0 ? overdueActivities.map((task) => <TaskCard key={task.id} task={task} onClick={() => handleTaskClick(task)} isOverdue />) : <p className="p-2 h-full flex items-center justify-center text-xs text-muted-foreground">No overdue activities.</p>}</div></div>
+                    <div className="space-y-4"><div className="flex items-center gap-2 px-1"><CheckSquare className="h-5 w-5 text-primary" /><h3 className="text-lg font-semibold">Tasks</h3></div><div className="space-y-2 rounded-lg border p-2 h-80 overflow-y-auto pr-2">{overdueSystemTasks.length > 0 ? overdueSystemTasks.map((task) => <TaskCard key={task.id} task={task} onClick={() => handleTaskClick(task)} isOverdue />) : <p className="p-2 h-full flex items-center justify-center text-xs text-muted-foreground">No overdue tasks.</p>}</div></div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          <Card>
+            <CardHeader><CardTitle>Today & Upcoming</CardTitle><CardDescription>Click on any item to take action.</CardDescription></CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Today & Upcoming Columns */}
+                <div className="space-y-4"><div className="flex items-center gap-2 px-1"><Users className="h-5 w-5 text-primary" /><h3 className="text-lg font-semibold">Meetings</h3></div><div className="space-y-4 rounded-lg border p-2"><div><h4 className="px-2 pb-2 text-sm font-semibold text-muted-foreground">Today</h4><div className="space-y-2 h-48 overflow-y-auto pr-2">{todaysMeetings.length > 0 ? todaysMeetings.map((task) => <TaskCard key={task.id} task={task} onClick={() => handleTaskClick(task)} />) : <p className="p-2 h-full flex items-center justify-center text-xs text-muted-foreground">No meetings today.</p>}</div></div><div className="pt-2"><h4 className="px-2 pb-2 text-sm font-semibold text-muted-foreground">Upcoming</h4><div className="space-y-2 h-48 overflow-y-auto pr-2">{upcomingMeetings.length > 0 ? upcomingMeetings.map((task) => <TaskCard key={task.id} task={task} onClick={() => handleTaskClick(task)} isUpcoming />) : <p className="p-2 h-full flex items-center justify-center text-xs text-muted-foreground">No upcoming meetings.</p>}</div></div></div></div>
+                <div className="space-y-4"><div className="flex items-center gap-2 px-1"><Monitor className="h-5 w-5 text-primary" /><h3 className="text-lg font-semibold">Demos</h3></div><div className="space-y-4 rounded-lg border p-2"><div><h4 className="px-2 pb-2 text-sm font-semibold text-muted-foreground">Today</h4><div className="space-y-2 h-48 overflow-y-auto pr-2">{todaysDemos.length > 0 ? todaysDemos.map((task) => <TaskCard key={task.id} task={task} onClick={() => handleTaskClick(task)} />) : <p className="p-2 h-full flex items-center justify-center text-xs text-muted-foreground">No demos today.</p>}</div></div><div className="pt-2"><h4 className="px-2 pb-2 text-sm font-semibold text-muted-foreground">Upcoming</h4><div className="space-y-2 h-48 overflow-y-auto pr-2">{upcomingDemos.length > 0 ? upcomingDemos.map((task) => <TaskCard key={task.id} task={task} onClick={() => handleTaskClick(task)} isUpcoming />) : <p className="p-2 h-full flex items-center justify-center text-xs text-muted-foreground">No upcoming demos.</p>}</div></div></div></div>
+                <div className="space-y-4"><div className="flex items-center gap-2 px-1"><Phone className="h-5 w-5 text-primary" /><h3 className="text-lg font-semibold">Activities</h3></div><div className="space-y-4 rounded-lg border p-2"><div><h4 className="px-2 pb-2 text-sm font-semibold text-muted-foreground">Today</h4><div className="space-y-2 h-48 overflow-y-auto pr-2">{todaysActivities.length > 0 ? todaysActivities.map((task) => <TaskCard key={task.id} task={task} onClick={() => handleTaskClick(task)} />) : <p className="p-2 h-full flex items-center justify-center text-xs text-muted-foreground">No activities today.</p>}</div></div><div className="pt-2"><h4 className="px-2 pb-2 text-sm font-semibold text-muted-foreground">Upcoming</h4><div className="space-y-2 h-48 overflow-y-auto pr-2">{upcomingActivities.length > 0 ? upcomingActivities.map((task) => <TaskCard key={task.id} task={task} onClick={() => handleTaskClick(task)} isUpcoming />) : <p className="p-2 h-full flex items-center justify-center text-xs text-muted-foreground">No upcoming activities.</p>}</div></div></div></div>
+                <div className="space-y-4"><div className="flex items-center gap-2 px-1"><CheckSquare className="h-5 w-5 text-primary" /><h3 className="text-lg font-semibold">Tasks</h3></div><div className="space-y-4 rounded-lg border p-2"><div><h4 className="px-2 pb-2 text-sm font-semibold text-muted-foreground">Today</h4><div className="space-y-2 h-48 overflow-y-auto pr-2">{todaysSystemTasks.length > 0 ? todaysSystemTasks.map((task) => <TaskCard key={task.id} task={task} onClick={() => handleTaskClick(task)} />) : <p className="p-2 h-full flex items-center justify-center text-xs text-muted-foreground">No tasks due today.</p>}</div></div><div className="pt-2"><h4 className="px-2 pb-2 text-sm font-semibold text-muted-foreground">Upcoming</h4><div className="space-y-2 h-48 overflow-y-auto pr-2">{upcomingSystemTasks.length > 0 ? upcomingSystemTasks.map((task) => <TaskCard key={task.id} task={task} onClick={() => handleTaskClick(task)} isUpcoming />) : <p className="p-2 h-full flex items-center justify-center text-xs text-muted-foreground">No upcoming tasks.</p>}</div></div></div></div>
+              </div>
+            </CardContent>
+          </Card>
+          <div className="grid gap-4 pt-4 grid-cols-1 lg:grid-cols-5">
+            <Card className="lg:col-span-2">{/* Lead Status Chart */}
+              <CardHeader className="pb-2"><CardTitle className="text-sm md:text-lg">Lead Status Distribution</CardTitle><CardDescription className="text-xs hidden md:block">{user.role === "admin" ? "Distribution of all leads" : "Distribution of your leads"}</CardDescription></CardHeader>
+              <CardContent className="pb-2"><div className="flex flex-col md:block"><ChartContainer config={dynamicChartConfig} className="mx-auto aspect-square max-h-[150px] md:max-h-[250px]"><ResponsiveContainer width="100%" height="100%"><PieChart><ChartTooltip cursor={false} content={({ active, payload }) => { if (active && payload && payload.length) { const data = payload[0].payload; return (<div className="p-2 text-sm bg-background border rounded-lg shadow-lg">{data.label}: <span className="font-bold">{data.value}</span></div>); } return null; }} /><Pie data={leadStatusData} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={2}>{leadStatusData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}</Pie></PieChart></ResponsiveContainer></ChartContainer><div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 md:space-y-1 md:grid-cols-1">{leadStatusData.map((item) => (<div key={item.name} className="flex items-center justify-between text-xs"><div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.fill }} /> <span className="truncate">{item.label}</span></div><span className="font-bold">{item.value}</span></div>))}</div></div></CardContent>
+            </Card>
+            <div className="grid grid-cols-2 gap-4 lg:col-span-3">{/* Summary Cards */}
+              <Link href="/dashboard/leads" className="block"><Card className="h-full transition-colors cursor-pointer hover:bg-muted/50"><CardHeader className="flex flex-row items-center justify-between pb-1 space-y-0"><CardTitle className="text-sm font-medium">{user.role === "admin" ? "Total Leads" : "My Leads"}</CardTitle><Users className="w-4 h-4 text-muted-foreground" /></CardHeader><CardContent className="pb-2"><div className="text-2xl font-bold">{leads.length}</div><p className="text-xs text-muted-foreground">{user.role === "admin" ? "All leads in system" : "Leads assigned to you"}</p></CardContent></Card></Link>
+              <Link href="/dashboard/tasks" className="block"><Card className="h-full transition-colors cursor-pointer hover:bg-muted/50"><CardHeader className="flex flex-row items-center justify-between pb-1 space-y-0"><CardTitle className="text-sm font-medium">My Tasks</CardTitle><CheckSquare className="w-4 h-4 text-muted-foreground" /></CardHeader><CardContent className="pb-2"><div className="text-2xl font-bold">{totalTasks}</div><p className="text-xs text-muted-foreground">Total assigned tasks</p></CardContent></Card></Link>
+              <Link href="/dashboard/events" className="block"><Card className="h-full transition-colors cursor-pointer hover:bg-muted/50"><CardHeader className="flex flex-row items-center justify-between pb-1 space-y-0"><CardTitle className="text-sm font-medium">Events</CardTitle><Users className="w-4 h-4 text-muted-foreground" /></CardHeader><CardContent className="pb-2"><div className="flex divide-x"><div className="flex-1 pr-3"><div className="text-2xl font-bold">{totalMeetings}</div><p className="text-xs text-muted-foreground">Meetings</p></div><div className="flex-1 pl-3"><div className="text-2xl font-bold">{totalDemos}</div><p className="text-xs text-muted-foreground">Demos</p></div></div></CardContent></Card></Link>
+              <Card><CardHeader className="flex flex-row items-center justify-between pb-1 space-y-0"><CardTitle className="text-sm font-medium">Conversion Rate</CardTitle><Users className="w-4 h-4 text-muted-foreground" /></CardHeader><CardContent className="pb-2"><div className="text-2xl font-bold">{leads.length > 0 ? `${((leads.filter((l) => l.status === "Won/Deal Done").length / leads.length) * 100).toFixed(1)}%` : "0%"}</div><p className="text-xs text-muted-foreground">Based on your leads</p></CardContent></Card>
+            </div>
+          </div>
+        </div>
+        <MarkAsDoneModal activity={activityToComplete as any} currentUser={user} isOpen={isDoneModalOpen} onClose={() => setDoneModalOpen(false)} onSuccess={handleSuccess} />
+        {taskToTakeActionOn && (
+            <AlertDialog open={isTaskModalOpen} onOpenChange={setTaskModalOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Task: {taskToTakeActionOn.title}</AlertDialogTitle>
+                        <AlertDialogDescription>This task is currently 'Pending'. What would you like to do?<br /><span className="block mt-2 font-semibold">Details:</span> {taskToTakeActionOn.details || "N/A"}</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => { handleStartTask(taskToTakeActionOn.id); setTaskModalOpen(false); }}>Start Task (In Progress)</AlertDialogAction>
+                        <AlertDialogAction onClick={() => router.push('/dashboard/tasks')}>Complete Task</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        )}
+      </>
+    )
+}
