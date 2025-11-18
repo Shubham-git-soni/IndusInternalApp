@@ -1,6 +1,6 @@
+using Indus.Api.DTOs.Auth;
 using Indus.Api.Models;
 using Indus.Api.Interfaces;
-using Indus.Api.Controllers;
 
 // Ensure the namespace is exactly this
 namespace Indus.Api.Services

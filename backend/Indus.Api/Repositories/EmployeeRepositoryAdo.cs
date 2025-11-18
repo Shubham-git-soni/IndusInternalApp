@@ -1,4 +1,5 @@
 using Indus.Api.Data;
+using Indus.Api.DTOs.Employee;
 using Indus.Api.Interfaces;
 using Indus.Api.Models;
 using Microsoft.Data.SqlClient;
@@ -311,6 +312,284 @@ namespace Indus.Api.Repositories
             cmd.Parameters.AddWithValue("@DepartmentID", employee.DepartmentID);
             cmd.Parameters.AddWithValue("@DesignationID", employee.DesignationID);
             cmd.Parameters.AddWithValue("@ReportingManagerID", (object?)employee.ReportingManagerID ?? DBNull.Value);
+        }
+
+        #endregion
+
+        #region DTO-based Complex Queries
+
+        /// <summary>
+        /// Get employees with details (for list view)
+        /// </summary>
+        public async Task<IEnumerable<EmployeeListItemDto>> GetEmployeesWithDetailsAsync(string? search, string? department, string? status)
+        {
+            List<EmployeeListItemDto> employees = new List<EmployeeListItemDto>();
+
+            using (SqlConnection conn = _dbConnection.GetConnection())
+            {
+                await conn.OpenAsync();
+
+                string query = @"
+                    SELECT
+                        e.EmployeeID,
+                        e.FullName,
+                        e.Email,
+                        e.PhoneNumber,
+                        d.DepartmentName,
+                        des.DesignationName,
+                        e.DateOfJoining,
+                        e.Status,
+                        m.FullName AS ManagerName,
+                        e.PhotoPath
+                    FROM Employees e
+                    INNER JOIN Departments d ON e.DepartmentID = d.DepartmentID
+                    INNER JOIN Designations des ON e.DesignationID = des.DesignationID
+                    LEFT JOIN Employees m ON e.ReportingManagerID = m.EmployeeID
+                    WHERE 1=1";
+
+                List<SqlParameter> parameters = new List<SqlParameter>();
+
+                if (!string.IsNullOrEmpty(search))
+                {
+                    query += " AND (e.FullName LIKE @Search OR e.Email LIKE @Search)";
+                    parameters.Add(new SqlParameter("@Search", "%" + search + "%"));
+                }
+
+                if (!string.IsNullOrEmpty(department) && department.ToLower() != "all")
+                {
+                    query += " AND d.DepartmentName = @Department";
+                    parameters.Add(new SqlParameter("@Department", department));
+                }
+
+                if (!string.IsNullOrEmpty(status) && status.ToLower() != "all")
+                {
+                    query += " AND e.Status = @Status";
+                    parameters.Add(new SqlParameter("@Status", status));
+                }
+
+                query += " ORDER BY e.EmployeeID";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddRange(parameters.ToArray());
+
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            employees.Add(new EmployeeListItemDto(
+                                reader.GetInt32(0), // EmployeeID
+                                reader.GetString(1), // FullName
+                                reader.GetString(2), // Email
+                                reader.IsDBNull(3) ? null : reader.GetString(3), // PhoneNumber
+                                reader.GetString(4), // DepartmentName
+                                reader.GetString(5), // DesignationName
+                                reader.GetDateTime(6).ToString("yyyy-MM-dd"), // DateOfJoining
+                                reader.GetString(7), // Status
+                                reader.IsDBNull(8) ? null : reader.GetString(8), // ManagerName
+                                reader.IsDBNull(9) ? null : reader.GetString(9) // PhotoPath
+                            ));
+                        }
+                    }
+                }
+            }
+
+            return employees;
+        }
+
+        /// <summary>
+        /// Get employee full profile (for detail view)
+        /// </summary>
+        public async Task<EmployeeDetailDto?> GetEmployeeFullProfileAsync(int employeeId)
+        {
+            using (SqlConnection conn = _dbConnection.GetConnection())
+            {
+                await conn.OpenAsync();
+
+                // Main employee query with related data
+                string query = @"
+                    SELECT
+                        e.EmployeeID, e.FullName, e.Email, e.PhoneNumber, e.PersonalEmail,
+                        e.DateOfBirth, e.Gender, e.BloodGroup, e.MaritalStatus, e.WeddingDate,
+                        e.CurrentAddress, e.PermanentAddress, e.DateOfJoining, e.ConfirmationDate,
+                        e.EmployeeType, e.WorkLocation, e.UanNumber, e.PanCardNumber, e.AadharCardNumber,
+                        e.Status, e.IsLoginEnabled, e.PhotoPath,
+                        d.DepartmentName,
+                        des.DesignationName,
+                        r.RoleName,
+                        m.FullName AS ManagerName,
+                        b.BankName, b.AccountNumber, b.IFSCCode, b.AccountHolderName,
+                        s.AnnualCTC, s.BasicSalary, s.HRA, s.PFDeduction, s.ProfessionalTax,
+                        s.OtherAllowances, s.CostRate, s.CostType
+                    FROM Employees e
+                    LEFT JOIN Departments d ON e.DepartmentID = d.DepartmentID
+                    LEFT JOIN Designations des ON e.DesignationID = des.DesignationID
+                    LEFT JOIN Roles r ON e.RoleID = r.RoleID
+                    LEFT JOIN Employees m ON e.ReportingManagerID = m.EmployeeID
+                    LEFT JOIN BankDetails b ON e.EmployeeID = b.EmployeeID
+                    LEFT JOIN SalaryDetails s ON e.EmployeeID = s.EmployeeID
+                    WHERE e.EmployeeID = @EmployeeID";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@EmployeeID", employeeId);
+
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        if (!await reader.ReadAsync())
+                        {
+                            return null;
+                        }
+
+                        // Build bank details DTO
+                        BankDetailsDto? bankDetails = null;
+                        if (!reader.IsDBNull(reader.GetOrdinal("BankName")))
+                        {
+                            bankDetails = new BankDetailsDto(
+                                reader.GetString(reader.GetOrdinal("BankName")),
+                                reader.IsDBNull(reader.GetOrdinal("AccountNumber")) ? null : reader.GetString(reader.GetOrdinal("AccountNumber")),
+                                reader.IsDBNull(reader.GetOrdinal("IFSCCode")) ? null : reader.GetString(reader.GetOrdinal("IFSCCode")),
+                                reader.IsDBNull(reader.GetOrdinal("AccountHolderName")) ? null : reader.GetString(reader.GetOrdinal("AccountHolderName"))
+                            );
+                        }
+
+                        // Build salary details DTO
+                        SalaryDetailsDto? salaryDetails = null;
+                        if (!reader.IsDBNull(reader.GetOrdinal("AnnualCTC")))
+                        {
+                            salaryDetails = new SalaryDetailsDto(
+                                reader.GetDecimal(reader.GetOrdinal("AnnualCTC")),
+                                reader.IsDBNull(reader.GetOrdinal("BasicSalary")) ? null : reader.GetDecimal(reader.GetOrdinal("BasicSalary")),
+                                reader.IsDBNull(reader.GetOrdinal("HRA")) ? null : reader.GetDecimal(reader.GetOrdinal("HRA")),
+                                reader.IsDBNull(reader.GetOrdinal("PFDeduction")) ? null : reader.GetDecimal(reader.GetOrdinal("PFDeduction")),
+                                reader.IsDBNull(reader.GetOrdinal("ProfessionalTax")) ? null : reader.GetDecimal(reader.GetOrdinal("ProfessionalTax")),
+                                reader.IsDBNull(reader.GetOrdinal("OtherAllowances")) ? null : reader.GetDecimal(reader.GetOrdinal("OtherAllowances")),
+                                reader.IsDBNull(reader.GetOrdinal("CostRate")) ? null : reader.GetDecimal(reader.GetOrdinal("CostRate")),
+                                reader.IsDBNull(reader.GetOrdinal("CostType")) ? null : reader.GetString(reader.GetOrdinal("CostType"))
+                            );
+                        }
+
+                        // Close the first reader before fetching family members
+                        reader.Close();
+
+                        // Fetch family members
+                        string familyQuery = @"
+                            SELECT FamilyMemberID, FullName, Relationship, DateOfBirth, Gender, IsNominee, IsDependent
+                            FROM FamilyMembers
+                            WHERE EmployeeID = @EmployeeID";
+
+                        var familyMembers = new List<FamilyMemberDto>();
+                        using (SqlCommand familyCmd = new SqlCommand(familyQuery, conn))
+                        {
+                            familyCmd.Parameters.AddWithValue("@EmployeeID", employeeId);
+
+                            using (SqlDataReader familyReader = await familyCmd.ExecuteReaderAsync())
+                            {
+                                while (await familyReader.ReadAsync())
+                                {
+                                    familyMembers.Add(new FamilyMemberDto(
+                                        familyReader.GetInt32(0),
+                                        familyReader.GetString(1),
+                                        familyReader.GetString(2),
+                                        familyReader.GetDateTime(3).ToString("yyyy-MM-dd"),
+                                        familyReader.IsDBNull(4) ? null : familyReader.GetString(4),
+                                        familyReader.GetBoolean(5),
+                                        familyReader.GetBoolean(6)
+                                    ));
+                                }
+                            }
+                        }
+
+                        // Re-read main query data for building response
+                        // (since we closed the reader earlier)
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("@EmployeeID", employeeId);
+
+                        using (SqlDataReader mainReader = await cmd.ExecuteReaderAsync())
+                        {
+                            if (await mainReader.ReadAsync())
+                            {
+                                return new EmployeeDetailDto(
+                                    mainReader.GetInt32(mainReader.GetOrdinal("EmployeeID")),
+                                    mainReader.GetString(mainReader.GetOrdinal("FullName")),
+                                    mainReader.GetString(mainReader.GetOrdinal("Email")),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("PhoneNumber")) ? null : mainReader.GetString(mainReader.GetOrdinal("PhoneNumber")),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("PersonalEmail")) ? null : mainReader.GetString(mainReader.GetOrdinal("PersonalEmail")),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("DateOfBirth")) ? null : mainReader.GetDateTime(mainReader.GetOrdinal("DateOfBirth")).ToString("yyyy-MM-dd"),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("Gender")) ? null : mainReader.GetString(mainReader.GetOrdinal("Gender")),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("BloodGroup")) ? null : mainReader.GetString(mainReader.GetOrdinal("BloodGroup")),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("MaritalStatus")) ? null : mainReader.GetString(mainReader.GetOrdinal("MaritalStatus")),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("WeddingDate")) ? null : mainReader.GetDateTime(mainReader.GetOrdinal("WeddingDate")).ToString("yyyy-MM-dd"),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("CurrentAddress")) ? null : mainReader.GetString(mainReader.GetOrdinal("CurrentAddress")),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("PermanentAddress")) ? null : mainReader.GetString(mainReader.GetOrdinal("PermanentAddress")),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("DepartmentName")) ? null : mainReader.GetString(mainReader.GetOrdinal("DepartmentName")),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("DesignationName")) ? null : mainReader.GetString(mainReader.GetOrdinal("DesignationName")),
+                                    mainReader.GetDateTime(mainReader.GetOrdinal("DateOfJoining")).ToString("yyyy-MM-dd"),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("ConfirmationDate")) ? null : mainReader.GetDateTime(mainReader.GetOrdinal("ConfirmationDate")).ToString("yyyy-MM-dd"),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("EmployeeType")) ? null : mainReader.GetString(mainReader.GetOrdinal("EmployeeType")),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("WorkLocation")) ? null : mainReader.GetString(mainReader.GetOrdinal("WorkLocation")),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("ManagerName")) ? null : mainReader.GetString(mainReader.GetOrdinal("ManagerName")),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("UanNumber")) ? null : mainReader.GetString(mainReader.GetOrdinal("UanNumber")),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("PanCardNumber")) ? null : mainReader.GetString(mainReader.GetOrdinal("PanCardNumber")),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("AadharCardNumber")) ? null : mainReader.GetString(mainReader.GetOrdinal("AadharCardNumber")),
+                                    mainReader.GetString(mainReader.GetOrdinal("Status")),
+                                    mainReader.GetBoolean(mainReader.GetOrdinal("IsLoginEnabled")),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("RoleName")) ? null : mainReader.GetString(mainReader.GetOrdinal("RoleName")),
+                                    mainReader.IsDBNull(mainReader.GetOrdinal("PhotoPath")) ? null : mainReader.GetString(mainReader.GetOrdinal("PhotoPath")),
+                                    bankDetails,
+                                    salaryDetails,
+                                    familyMembers
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Get managers list
+        /// </summary>
+        public async Task<IEnumerable<ManagerDto>> GetManagersAsync()
+        {
+            List<ManagerDto> managers = new List<ManagerDto>();
+
+            using (SqlConnection conn = _dbConnection.GetConnection())
+            {
+                await conn.OpenAsync();
+
+                string query = @"
+                    SELECT
+                        e.EmployeeID,
+                        e.FullName,
+                        d.DepartmentName,
+                        des.DesignationName
+                    FROM Employees e
+                    INNER JOIN Departments d ON e.DepartmentID = d.DepartmentID
+                    INNER JOIN Designations des ON e.DesignationID = des.DesignationID
+                    WHERE e.IsActive = 1
+                    ORDER BY e.FullName";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            managers.Add(new ManagerDto(
+                                reader.GetInt32(0),
+                                reader.GetString(1),
+                                reader.GetString(2),
+                                reader.GetString(3)
+                            ));
+                        }
+                    }
+                }
+            }
+
+            return managers;
         }
 
         #endregion

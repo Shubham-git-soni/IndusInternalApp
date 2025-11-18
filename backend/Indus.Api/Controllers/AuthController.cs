@@ -1,3 +1,4 @@
+using Indus.Api.DTOs.Auth;
 using Indus.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;

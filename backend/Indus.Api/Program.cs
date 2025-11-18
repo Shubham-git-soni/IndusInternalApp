@@ -33,12 +33,14 @@ builder.Services.AddScoped<IEmployeeRepository, EmployeeRepositoryAdo>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepositoryAdo>();
 builder.Services.AddScoped<IDesignationRepository, DesignationRepositoryAdo>();
 builder.Services.AddScoped<IRoleRepository, RoleRepositoryAdo>();
+builder.Services.AddScoped<IEmployeeDocumentRepository, EmployeeDocumentRepositoryAdo>();
 
 // Register Services (Business Logic Layer)
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDesignationService, DesignationService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IFileUploadService, FileUploadService>();
 builder.Services.AddScoped<AuthService>();
 
 // ***** AUTHENTICATION SETUP *****
@@ -75,6 +77,10 @@ if (app.Environment.IsDevelopment())
 }
 
 // app.UseHttpsRedirection();
+
+// Enable serving static files (for uploaded documents)
+app.UseStaticFiles();
+
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();

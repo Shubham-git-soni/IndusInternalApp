@@ -13,6 +13,9 @@ namespace Indus.Api.Models
         public string? BloodGroup { get; set; }
         public string? MaritalStatus { get; set; }
         public DateTime? WeddingDate { get; set; }
+        public string? FatherName { get; set; }
+        public string? EmergencyContactNumber { get; set; }
+        public string? EmergencyContactRelation { get; set; }
 
         // Address Information
         public string? CurrentAddress { get; set; }
