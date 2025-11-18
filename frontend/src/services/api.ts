@@ -59,9 +59,12 @@ export interface Employee {
 export interface CreateEmployeeRequest {
   // Basic Information
   fullName: string;
+  fatherName?: string;
   email: string;
   password: string;
   phoneNumber?: string;
+  emergencyContactNumber?: string;
+  emergencyContactRelation?: string;
   personalEmail?: string;
   dateOfBirth?: string;
   gender?: string;

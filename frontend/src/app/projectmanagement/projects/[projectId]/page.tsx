@@ -3,7 +3,7 @@
 
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
-import { User, Calendar, Flag, CheckSquare, BarChart2, Plus, Edit, Trash2, Eye, MoreVertical, GripVertical, Flame, CheckCircle2, Circle, Bug, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
+import { User, Calendar, Flag, CheckSquare, BarChart2, Plus, Edit, Trash2, Eye, MoreVertical, GripVertical, Flame, CheckCircle2, Circle, Bug, ChevronLeft, ChevronRight, AlertTriangle, BookOpen } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import FilterExportBar from '@/components/FilterExportBar';
@@ -301,13 +301,19 @@ export default function ProjectDetailsPage() {
         />
 
         <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-5 sm:w-auto gap-1">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="tasks">Tasks</TabsTrigger>
-                <TabsTrigger value="teams">Teams</TabsTrigger>
-                <TabsTrigger value="backlogs">Backlogs</TabsTrigger>
-                <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto">
+                <TabsList className="inline-flex w-full sm:w-auto gap-1 p-1">
+                    <TabsTrigger value="overview" className="whitespace-nowrap">Overview</TabsTrigger>
+                    <TabsTrigger value="tasks" className="whitespace-nowrap">Tasks</TabsTrigger>
+                    <TabsTrigger value="teams" className="whitespace-nowrap">Teams</TabsTrigger>
+                    <TabsTrigger value="backlogs" className="whitespace-nowrap">Backlogs</TabsTrigger>
+                    <TabsTrigger value="roadmap" className="whitespace-nowrap">Roadmap</TabsTrigger>
+                    <TabsTrigger value="wiki" className="whitespace-nowrap flex items-center gap-1.5">
+                        <BookOpen className="w-4 h-4" />
+                        <span>Wiki</span>
+                    </TabsTrigger>
+                </TabsList>
+            </div>
             
             <TabsContent value="overview" className="mt-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -614,6 +620,40 @@ export default function ProjectDetailsPage() {
                                 </div>
                             </div>
                         ))}
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
+            {/* Wiki Tab */}
+            <TabsContent value="wiki" className="space-y-4">
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <BookOpen className="w-6 h-6 text-primary" />
+                                <div>
+                                    <CardTitle>Project Knowledge Base</CardTitle>
+                                    <p className="text-sm text-muted-foreground mt-1">Documentation and resources for {project.name}</p>
+                                </div>
+                            </div>
+                            <Button>
+                                <Plus className="w-4 h-4 mr-2" />
+                                Add Document
+                            </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-center py-12">
+                            <BookOpen className="w-16 h-16 mx-auto text-muted-foreground mb-4 opacity-50" />
+                            <h3 className="text-lg font-semibold text-foreground mb-2">No documentation yet</h3>
+                            <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                                Start building your project knowledge base by adding documentation, guides, and important resources.
+                            </p>
+                            <Button variant="outline">
+                                <Plus className="w-4 h-4 mr-2" />
+                                Create First Document
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </TabsContent>

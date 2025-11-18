@@ -46,9 +46,12 @@ export default function AddTeamMemberPage() {
   const [formData, setFormData] = useState({
     // Basic Information (Users table)
     fullName: '',
+    fatherName: '',
     email: '',
     personalEmail: '',
     phoneNumber: '',
+    emergencyContactNumber: '',
+    emergencyContactRelation: '',
     dateOfBirth: '',
     gender: '',
     bloodGroup: '',
@@ -222,9 +225,12 @@ export default function AddTeamMemberPage() {
       const employeeData: CreateEmployeeRequest = {
         // Basic Information
         fullName: formData.fullName,
+        fatherName: formData.fatherName || undefined,
         email: formData.email,
         password: formData.email, // Using email as default password
         phoneNumber: formData.phoneNumber || undefined,
+        emergencyContactNumber: formData.emergencyContactNumber || undefined,
+        emergencyContactRelation: formData.emergencyContactRelation || undefined,
         personalEmail: formData.personalEmail || undefined,
         dateOfBirth: formData.dateOfBirth || undefined,
         gender: formData.gender || undefined,
@@ -310,7 +316,7 @@ export default function AddTeamMemberPage() {
   return (
     <DashboardLayout>
       {/* Custom CSS for scrollbar hiding */}
-      <style jsx>{`
+      {/* <style jsx>{`
         .hide-scrollbar::-webkit-scrollbar {
           display: none;
         }
@@ -318,8 +324,8 @@ export default function AddTeamMemberPage() {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
-      `}</style>
-      <div className="pt-6 pb-2 space-y-4 sm:space-y-6">
+      `}</style> */}
+      <div className="py-3 lg:py-4 space-y-3 lg:space-y-4">
         {/* Header - Mobile Optimized */}
         <div>
           <div className="flex items-center space-x-3 sm:space-x-4">
@@ -370,9 +376,9 @@ export default function AddTeamMemberPage() {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 pb-0 sm:pb-4">
+          <form onSubmit={handleSubmit} className="space-y-3 lg:space-y-4">
           {/* Tab Navigation - Mobile Optimized with Horizontal Scroll */}
-          <div className="bg-card rounded-lg sm:rounded-xl shadow-sm border border-border mb-4">
+          <div className="bg-card rounded-lg sm:rounded-xl shadow-sm border border-border overflow-visible">
             <div className="relative">
               <Tabs
                 tabs={tabs}
@@ -382,10 +388,10 @@ export default function AddTeamMemberPage() {
               />
             </div>
 
-            <div className="p-4 sm:p-6 pb-2">
+            <div className="p-3 sm:p-4 lg:p-6 overflow-visible">
               {/* Basic Information Tab */}
               {activeTab === 'basic' && (
-                <div className="space-y-6 pb-4">
+                <div className="space-y-4">
                   <div className="flex items-center justify-center mb-6">
                     <div className="relative">
                       <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center">
@@ -413,6 +419,20 @@ export default function AddTeamMemberPage() {
                         className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                         placeholder="John Smith"
                         required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
+                        Father Name
+                      </label>
+                      <input
+                        type="text"
+                        name="fatherName"
+                        value={formData.fatherName}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
+                        placeholder="Father's name"
                       />
                     </div>
 
@@ -457,6 +477,34 @@ export default function AddTeamMemberPage() {
                         className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                         placeholder="+1-234-567-8901"
                         required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
+                        Emergency Contact Number
+                      </label>
+                      <input
+                        type="tel"
+                        name="emergencyContactNumber"
+                        value={formData.emergencyContactNumber}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
+                        placeholder="+1-234-567-8901"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
+                        Emergency Contact Relation
+                      </label>
+                      <input
+                        type="text"
+                        name="emergencyContactRelation"
+                        value={formData.emergencyContactRelation}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
+                        placeholder="e.g., Father, Mother, Spouse"
                       />
                     </div>
 
@@ -562,7 +610,7 @@ export default function AddTeamMemberPage() {
 
               {/* Contact & Address Tab */}
               {activeTab === 'contact' && (
-                <div className="space-y-6 pb-4">
+                <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-card-foreground mb-2">
                       Current Address *
@@ -612,7 +660,7 @@ export default function AddTeamMemberPage() {
 
               {/* Job Information Tab */}
               {activeTab === 'job' && (
-                <div className="space-y-6 pb-4">
+                <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div>
                       <label className="block text-sm font-medium text-card-foreground mb-2">
@@ -763,11 +811,11 @@ export default function AddTeamMemberPage() {
 
               {/* Bank & Documents Tab */}
               {activeTab === 'bank' && (
-                <div className="space-y-3 pb-0">
+                <div className="space-y-4">
                   {/* Bank Information Section */}
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-4">Bank Information</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                       <div>
                         <label className="block text-sm font-medium text-card-foreground mb-2">
                           Bank Name *
@@ -818,7 +866,7 @@ export default function AddTeamMemberPage() {
                   {/* Government Documents Section */}
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-4">Government Documents</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                       <div>
                         <label className="block text-sm font-medium text-card-foreground mb-2">
                           UAN Number
@@ -865,8 +913,8 @@ export default function AddTeamMemberPage() {
 
                   {/* Document Uploads Section */}
                   <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">Document Uploads</h3>
-                    <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-foreground mb-3">Document Uploads</h3>
+                    <div className="space-y-3">
                       {/* Aadhar Card Upload */}
                       <div>
                         <label className="block text-sm font-medium text-card-foreground mb-2">
@@ -1035,7 +1083,7 @@ export default function AddTeamMemberPage() {
 
               {/* Family Details Tab - Only for Married */}
               {activeTab === 'family' && formData.maritalStatus === 'Married' && (
-                <div className="space-y-6 pb-4">
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-semibold text-foreground">Family Members</h3>
@@ -1169,7 +1217,7 @@ export default function AddTeamMemberPage() {
 
               {/* Salary Information Tab */}
               {activeTab === 'salary' && (
-                <div className="space-y-6 pb-4">
+                <div className="space-y-4">
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-4">Salary Structure</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
